@@ -1,23 +1,29 @@
+
+using Warehouse.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// API
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// SQL Server + EF Core
+var connectionString =
+    builder.Configuration.GetConnectionString("WarehouseDb")
+    ?? throw new InvalidOperationException(
+        "Connection string 'WarehouseDb' not found.");
+
+builder.Services.AddInfrastructure(connectionString);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
