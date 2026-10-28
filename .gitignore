@@ -426,3 +426,49 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# ==========================================
+# Warehouse Management System
+# React, React Native, Expo, ASP.NET Core
+# ==========================================
+
+# Environment variables and local configuration
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+
+# React / Vite
+/web/dist/
+/web/.vite/
+
+# React Native / Expo
+/mobile/.expo/
+/mobile/.expo-shared/
+/mobile/dist/
+/mobile/web-build/
+
+# Android generated files
+/mobile/android/.gradle/
+/mobile/android/local.properties
+/mobile/android/build/
+/mobile/android/app/build/
+
+# iOS generated files
+/mobile/ios/Pods/
+/mobile/ios/build/
+
+# Android signing keys
+*.keystore
+*.jks
+
+# IDE
+.idea/
+
+# Node and build caches
+**/.cache/
+**/.turbo/
+
