@@ -20,6 +20,10 @@ public static class DependencyInjection
             IProductCategoryRepository,
             ProductCategoryRepository>();
 
+        services.AddScoped<
+            IUnitOfMeasureRepository,
+            UnitOfMeasureRepository>();
+
         return services;
     }
 }

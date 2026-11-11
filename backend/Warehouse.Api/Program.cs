@@ -19,6 +19,10 @@ builder.Services.AddScoped<
     IProductCategoryService,
     ProductCategoryService>();
 
+builder.Services.AddScoped<
+    IUnitOfMeasureService,
+    UnitOfMeasureService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
