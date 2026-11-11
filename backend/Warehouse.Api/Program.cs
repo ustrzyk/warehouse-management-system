@@ -27,6 +27,11 @@ builder.Services.AddScoped<
     IProductService,
     ProductService>();
 
+builder.Services.AddScoped<
+    IProductBatchService,
+    ProductBatchService>();
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

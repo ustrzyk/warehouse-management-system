@@ -28,6 +28,11 @@ public static class DependencyInjection
             IProductRepository,
             ProductRepository>();
 
+        services.AddScoped<
+            IProductBatchRepository,
+            ProductBatchRepository>();
+
+
         return services;
     }
 }
