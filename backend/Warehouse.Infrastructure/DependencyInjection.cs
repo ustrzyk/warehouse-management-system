@@ -24,6 +24,10 @@ public static class DependencyInjection
             IUnitOfMeasureRepository,
             UnitOfMeasureRepository>();
 
+        services.AddScoped<
+            IProductRepository,
+            ProductRepository>();
+
         return services;
     }
 }
