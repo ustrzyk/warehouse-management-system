@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.Products;
-using Warehouse.Application.Exceptions;
 using Warehouse.Application.Interfaces.Services;
 
 namespace Warehouse.Api.Controllers;
@@ -13,7 +12,8 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _service;
 
-    public ProductsController(IProductService service)
+    public ProductsController(
+        IProductService service)
     {
         _service = service;
     }
@@ -24,7 +24,8 @@ public class ProductsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _service.GetPageAsync(
-            query, cancellationToken);
+            query,
+            cancellationToken);
 
         return Ok(result);
     }
@@ -38,9 +39,12 @@ public class ProductsController : ControllerBase
             return BadRequest("Invalid product ID.");
 
         var product = await _service.GetByIdAsync(
-            id, cancellationToken);
+            id,
+            cancellationToken);
 
-        return product is null ? NotFound() : Ok(product);
+        return product is null
+            ? NotFound()
+            : Ok(product);
     }
 
     [HttpPost]
@@ -48,34 +52,14 @@ public class ProductsController : ControllerBase
         [FromBody] CreateProductRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var product = await _service.CreateAsync(
-                request, cancellationToken);
+        var product = await _service.CreateAsync(
+            request,
+            cancellationToken);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = product.Id },
-                product);
-        }
-        catch (DuplicateProductCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate product code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
-        catch (InvalidProductReferenceException ex)
-        {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid product reference",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = product.Id },
+            product);
     }
 
     [HttpPut("{id:int}")]
@@ -87,31 +71,14 @@ public class ProductsController : ControllerBase
         if (id <= 0)
             return BadRequest("Invalid product ID.");
 
-        try
-        {
-            var product = await _service.UpdateAsync(
-                id, request, cancellationToken);
+        var product = await _service.UpdateAsync(
+            id,
+            request,
+            cancellationToken);
 
-            return product is null ? NotFound() : Ok(product);
-        }
-        catch (DuplicateProductCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate product code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
-        catch (InvalidProductReferenceException ex)
-        {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid product reference",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
+        return product is null
+            ? NotFound()
+            : Ok(product);
     }
 
     [HttpDelete("{id:int}")]
@@ -123,7 +90,8 @@ public class ProductsController : ControllerBase
             return BadRequest("Invalid product ID.");
 
         var deactivated = await _service.DeactivateAsync(
-            id, cancellationToken);
+            id,
+            cancellationToken);
 
         return deactivated ? NoContent() : NotFound();
     }

@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.UnitsOfMeasure;
-using Warehouse.Application.Exceptions;
 using Warehouse.Application.Interfaces.Services;
 
 namespace Warehouse.Api.Controllers;
@@ -12,7 +12,8 @@ public class UnitsOfMeasureController : ControllerBase
 {
     private readonly IUnitOfMeasureService _service;
 
-    public UnitsOfMeasureController(IUnitOfMeasureService service)
+    public UnitsOfMeasureController(
+        IUnitOfMeasureService service)
     {
         _service = service;
     }
@@ -24,7 +25,8 @@ public class UnitsOfMeasureController : ControllerBase
             CancellationToken cancellationToken)
     {
         var result = await _service.GetPageAsync(
-            query, cancellationToken);
+            query,
+            cancellationToken);
 
         return Ok(result);
     }
@@ -38,9 +40,12 @@ public class UnitsOfMeasureController : ControllerBase
             return BadRequest("Invalid unit ID.");
 
         var unit = await _service.GetByIdAsync(
-            id, cancellationToken);
+            id,
+            cancellationToken);
 
-        return unit is null ? NotFound() : Ok(unit);
+        return unit is null
+            ? NotFound()
+            : Ok(unit);
     }
 
     [HttpPost]
@@ -48,25 +53,14 @@ public class UnitsOfMeasureController : ControllerBase
         [FromBody] CreateUnitOfMeasureRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var unit = await _service.CreateAsync(
-                request, cancellationToken);
+        var unit = await _service.CreateAsync(
+            request,
+            cancellationToken);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = unit.Id },
-                unit);
-        }
-        catch (DuplicateUnitOfMeasureCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate unit code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = unit.Id },
+            unit);
     }
 
     [HttpPut("{id:int}")]
@@ -78,22 +72,14 @@ public class UnitsOfMeasureController : ControllerBase
         if (id <= 0)
             return BadRequest("Invalid unit ID.");
 
-        try
-        {
-            var unit = await _service.UpdateAsync(
-                id, request, cancellationToken);
+        var unit = await _service.UpdateAsync(
+            id,
+            request,
+            cancellationToken);
 
-            return unit is null ? NotFound() : Ok(unit);
-        }
-        catch (DuplicateUnitOfMeasureCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate unit code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
+        return unit is null
+            ? NotFound()
+            : Ok(unit);
     }
 
     [HttpDelete("{id:int}")]
@@ -105,7 +91,8 @@ public class UnitsOfMeasureController : ControllerBase
             return BadRequest("Invalid unit ID.");
 
         var deactivated = await _service.DeactivateAsync(
-            id, cancellationToken);
+            id,
+            cancellationToken);
 
         return deactivated ? NoContent() : NotFound();
     }

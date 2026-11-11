@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.ProductCategories;
-using Warehouse.Application.Exceptions;
 using Warehouse.Application.Interfaces.Services;
 
 namespace Warehouse.Api.Controllers;
@@ -54,26 +53,14 @@ public class ProductCategoriesController : ControllerBase
         [FromBody] CreateProductCategoryRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var category = await _service.CreateAsync(
-                request,
-                cancellationToken);
+        var category = await _service.CreateAsync(
+            request,
+            cancellationToken);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = category.Id },
-                category);
-        }
-        catch (DuplicateProductCategoryCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate category code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = category.Id },
+            category);
     }
 
     [HttpPut("{id:int}")]
@@ -85,26 +72,14 @@ public class ProductCategoriesController : ControllerBase
         if (id <= 0)
             return BadRequest("Invalid category ID.");
 
-        try
-        {
-            var category = await _service.UpdateAsync(
-                id,
-                request,
-                cancellationToken);
+        var category = await _service.UpdateAsync(
+            id,
+            request,
+            cancellationToken);
 
-            return category is null
-                ? NotFound()
-                : Ok(category);
-        }
-        catch (DuplicateProductCategoryCodeException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate category code",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
+        return category is null
+            ? NotFound()
+            : Ok(category);
     }
 
     [HttpDelete("{id:int}")]
@@ -119,9 +94,6 @@ public class ProductCategoriesController : ControllerBase
             id,
             cancellationToken);
 
-        if (!deactivated)
-            return NotFound();
-
-        return NoContent();
+        return deactivated ? NoContent() : NotFound();
     }
 }

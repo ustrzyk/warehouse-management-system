@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.ProductBatches;
-using Warehouse.Application.Exceptions;
 using Warehouse.Application.Interfaces.Services;
 
 namespace Warehouse.Api.Controllers;
@@ -50,34 +49,13 @@ public class ProductBatchesController : ControllerBase
         [FromBody] CreateProductBatchRequest request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            var batch = await _service.CreateAsync(
-                request, cancellationToken);
+        var batch = await _service.CreateAsync(
+            request, cancellationToken);
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = batch.Id },
-                batch);
-        }
-        catch (DuplicateProductBatchException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate product batch",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
-        catch (InvalidProductBatchException ex)
-        {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid product batch",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = batch.Id },
+            batch);
     }
 
     [HttpPut("{id:int}")]
@@ -89,31 +67,10 @@ public class ProductBatchesController : ControllerBase
         if (id <= 0)
             return BadRequest("Invalid batch ID.");
 
-        try
-        {
-            var batch = await _service.UpdateAsync(
-                id, request, cancellationToken);
+        var batch = await _service.UpdateAsync(
+            id, request, cancellationToken);
 
-            return batch is null ? NotFound() : Ok(batch);
-        }
-        catch (DuplicateProductBatchException ex)
-        {
-            return Conflict(new ProblemDetails
-            {
-                Title = "Duplicate product batch",
-                Detail = ex.Message,
-                Status = StatusCodes.Status409Conflict
-            });
-        }
-        catch (InvalidProductBatchException ex)
-        {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid product batch",
-                Detail = ex.Message,
-                Status = StatusCodes.Status400BadRequest
-            });
-        }
+        return batch is null ? NotFound() : Ok(batch);
     }
 
     [HttpDelete("{id:int}")]
