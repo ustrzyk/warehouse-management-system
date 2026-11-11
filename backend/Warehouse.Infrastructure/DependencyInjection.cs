@@ -1,7 +1,9 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Warehouse.Application.Interfaces.Repositories;
 using Warehouse.Infrastructure.Persistence;
+using Warehouse.Infrastructure.Repositories;
 
 namespace Warehouse.Infrastructure;
 
@@ -13,6 +15,10 @@ public static class DependencyInjection
     {
         services.AddDbContext<WarehouseDbContext>(
             options => options.UseSqlServer(connectionString));
+
+        services.AddScoped<
+            IProductCategoryRepository,
+            ProductCategoryRepository>();
 
         return services;
     }
