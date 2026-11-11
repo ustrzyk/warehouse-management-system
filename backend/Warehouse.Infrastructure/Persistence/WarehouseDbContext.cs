@@ -13,6 +13,7 @@ public class WarehouseDbContext : DbContext
     {
     }
 
+    // Warehouse structure
     public DbSet<WarehouseEntity> Warehouses
         => Set<WarehouseEntity>();
 
@@ -21,6 +22,19 @@ public class WarehouseDbContext : DbContext
 
     public DbSet<StorageLocation> StorageLocations
         => Set<StorageLocation>();
+
+    // Product catalog
+    public DbSet<ProductCategory> ProductCategories
+        => Set<ProductCategory>();
+
+    public DbSet<UnitOfMeasure> UnitsOfMeasure
+        => Set<UnitOfMeasure>();
+
+    public DbSet<Product> Products
+        => Set<Product>();
+
+    public DbSet<ProductBatch> ProductBatches
+        => Set<ProductBatch>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
