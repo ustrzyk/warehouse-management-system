@@ -22,6 +22,76 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("StorageLocationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("StorageLocationId");
+
+                    b.ToTable("LogisticUnits", (string)null);
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnitItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("LogisticUnitId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductBatchId", "ProductId");
+
+                    b.HasIndex("LogisticUnitId", "ProductId", "ProductBatchId")
+                        .IsUnique();
+
+                    b.ToTable("LogisticUnitItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_LogisticUnitItems_Quantity_Positive", "[Quantity] > 0");
+                        });
+                });
+
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -277,6 +347,43 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.ToTable("WarehouseZones", (string)null);
                 });
 
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnit", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.StorageLocation", "StorageLocation")
+                        .WithMany()
+                        .HasForeignKey("StorageLocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("StorageLocation");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnitItem", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.LogisticUnit", "LogisticUnit")
+                        .WithMany("Items")
+                        .HasForeignKey("LogisticUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId", "ProductId")
+                        .HasPrincipalKey("Id", "ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("LogisticUnit");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductBatch");
+                });
+
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>
                 {
                     b.HasOne("Warehouse.Domain.Entities.ProductCategory", "ProductCategory")
@@ -327,6 +434,11 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnit", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>

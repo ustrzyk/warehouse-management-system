@@ -14,6 +14,12 @@ public class ProductBatchConfiguration
 
         builder.HasKey(x => x.Id);
 
+        builder.HasAlternateKey(x => new
+        {
+            x.Id,
+            x.ProductId
+        });
+
         builder.Property(x => x.BatchNumber)
             .IsRequired()
             .HasMaxLength(100);

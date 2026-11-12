@@ -36,6 +36,13 @@ public class WarehouseDbContext : DbContext
     public DbSet<ProductBatch> ProductBatches
         => Set<ProductBatch>();
 
+    public DbSet<LogisticUnit> LogisticUnits
+        => Set<LogisticUnit>();
+
+    public DbSet<LogisticUnitItem> LogisticUnitItems
+        => Set<LogisticUnitItem>();
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
