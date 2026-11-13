@@ -94,4 +94,40 @@ public class LogisticUnitRepository : ILogisticUnitRepository
             throw new DuplicateLogisticUnitCodeException(ex);
         }
     }
+
+    public Task<LogisticUnit?> GetTrackedByIdAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        return _context.LogisticUnits
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
+
+    public Task<bool> LocationIsActiveAsync(
+        int storageLocationId,
+        CancellationToken cancellationToken)
+    {
+        return _context.StorageLocations
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == storageLocationId
+                     && x.IsActive
+                     && x.WarehouseZone.IsActive
+                     && x.WarehouseZone.Warehouse.IsActive,
+                cancellationToken);
+    }
+
+    public Task<bool> HasItemsAsync(
+        int logisticUnitId,
+        CancellationToken cancellationToken)
+    {
+        return _context.LogisticUnitItems
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.LogisticUnitId == logisticUnitId,
+                cancellationToken);
+    }
+
 }

@@ -56,4 +56,21 @@ public class LogisticUnitsController : ControllerBase
             new { id = unit.Id },
             unit);
     }
+
+
+    [HttpPost("{id:int}/store")]
+    public async Task<ActionResult<LogisticUnitDto>> Store(
+        int id,
+        [FromBody] StoreLogisticUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid logistic unit ID.");
+
+        var unit = await _service.StoreAsync(
+            id, request, cancellationToken);
+
+        return unit is null ? NotFound() : Ok(unit);
+    }
+
 }

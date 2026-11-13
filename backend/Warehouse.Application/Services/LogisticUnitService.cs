@@ -79,6 +79,54 @@ public class LogisticUnitService : ILogisticUnitService
         return MapToDto(unit);
     }
 
+
+    public async Task<LogisticUnitDto?> StoreAsync(
+        int id,
+        StoreLogisticUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        var unit = await _repository.GetTrackedByIdAsync(
+            id, cancellationToken);
+
+        if (unit is null)
+            return null;
+
+        if (unit.Status != LogisticUnitStatus.Created)
+        {
+            throw new InvalidLogisticUnitException(
+                "Tylko paleta Created moze zostac odlozona.");
+        }
+
+        if (!await _repository.HasItemsAsync(
+            id, cancellationToken))
+        {
+            throw new InvalidLogisticUnitException(
+                "Nie mozna odlozyc pustej palety.");
+        }
+
+        if (!await _repository.LocationIsActiveAsync(
+            request.StorageLocationId, cancellationToken))
+        {
+            throw new InvalidLogisticUnitException(
+                "Lokalizacja nie istnieje lub nie jest aktywna.");
+        }
+
+        unit.StorageLocationId = request.StorageLocationId;
+        unit.Status = LogisticUnitStatus.Stored;
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
+
+        var updated = await _repository.GetByIdAsync(
+            id, cancellationToken);
+
+        return updated is null
+            ? throw new InvalidOperationException(
+                "Stored logistic unit could not be loaded.")
+            : MapToDto(updated);
+    }
+
+
     private static LogisticUnitDto MapToDto(
         LogisticUnit unit)
     {

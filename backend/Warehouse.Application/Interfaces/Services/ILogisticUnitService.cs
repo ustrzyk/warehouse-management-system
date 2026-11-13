@@ -17,4 +17,10 @@ public interface ILogisticUnitService
     Task<LogisticUnitDto> CreateAsync(
         CreateLogisticUnitRequest request,
         CancellationToken cancellationToken);
+
+    Task<LogisticUnitDto?> StoreAsync(
+        int id,
+        StoreLogisticUnitRequest request,
+        CancellationToken cancellationToken);
+
 }

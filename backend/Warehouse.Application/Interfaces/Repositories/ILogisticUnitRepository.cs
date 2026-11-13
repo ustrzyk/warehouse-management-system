@@ -25,4 +25,17 @@ public interface ILogisticUnitRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+
+    Task<LogisticUnit?> GetTrackedByIdAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task<bool> LocationIsActiveAsync(
+        int storageLocationId,
+        CancellationToken cancellationToken);
+
+    Task<bool> HasItemsAsync(
+        int logisticUnitId,
+        CancellationToken cancellationToken);
+
 }
