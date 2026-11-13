@@ -38,6 +38,15 @@ builder.Services.AddScoped<
     IProductBatchService,
     ProductBatchService>();
 
+builder.Services.AddScoped<
+    ILogisticUnitService,
+    LogisticUnitService>();
+
+builder.Services.AddScoped<
+    ILogisticUnitItemService,
+    LogisticUnitItemService>();
+
+
 var app = builder.Build();
 
 // Global exception middleware

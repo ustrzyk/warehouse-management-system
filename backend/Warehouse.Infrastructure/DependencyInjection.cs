@@ -32,6 +32,15 @@ public static class DependencyInjection
             IProductBatchRepository,
             ProductBatchRepository>();
 
+        services.AddScoped<
+            ILogisticUnitRepository,
+            LogisticUnitRepository>();
+
+        services.AddScoped<
+            ILogisticUnitItemRepository,
+            LogisticUnitItemRepository>();
+
+
 
         return services;
     }

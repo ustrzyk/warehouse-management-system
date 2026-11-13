@@ -31,6 +31,19 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InvalidProductBatchException =>
                 StatusCodes.Status400BadRequest,
 
+            DuplicateLogisticUnitCodeException =>
+                StatusCodes.Status409Conflict,
+
+            InvalidLogisticUnitException =>
+                StatusCodes.Status400BadRequest,
+
+            DuplicateLogisticUnitItemException =>
+                StatusCodes.Status409Conflict,
+
+            InvalidLogisticUnitItemException =>
+                StatusCodes.Status400BadRequest,
+
+
             _ => 0
         };
 
