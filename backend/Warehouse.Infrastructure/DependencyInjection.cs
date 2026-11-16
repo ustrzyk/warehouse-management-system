@@ -40,6 +40,9 @@ public static class DependencyInjection
             ILogisticUnitItemRepository,
             LogisticUnitItemRepository>();
 
+        services.AddScoped<
+            IWarehouseRepository,
+            WarehouseRepository>();
 
 
         return services;

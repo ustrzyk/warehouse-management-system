@@ -46,6 +46,10 @@ builder.Services.AddScoped<
     ILogisticUnitItemService,
     LogisticUnitItemService>();
 
+builder.Services.AddScoped<
+    IWarehouseService,
+    WarehouseService>();
+
 
 var app = builder.Build();
 

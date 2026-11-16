@@ -43,6 +43,12 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InvalidLogisticUnitItemException =>
                 StatusCodes.Status400BadRequest,
 
+            DuplicateWarehouseCodeException =>
+                StatusCodes.Status409Conflict,
+
+            InvalidWarehouseException =>
+                StatusCodes.Status400BadRequest,
+
 
             _ => 0
         };
