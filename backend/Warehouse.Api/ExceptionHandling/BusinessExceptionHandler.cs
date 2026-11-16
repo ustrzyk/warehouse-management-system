@@ -61,7 +61,8 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InvalidStorageLocationException =>
                 StatusCodes.Status400BadRequest,
 
-
+            ConcurrentLogisticUnitModificationException =>
+                StatusCodes.Status409Conflict,
 
 
             _ => 0

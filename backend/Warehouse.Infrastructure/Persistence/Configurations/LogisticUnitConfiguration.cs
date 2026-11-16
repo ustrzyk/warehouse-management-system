@@ -39,5 +39,9 @@ public class LogisticUnitConfiguration
             .WithOne(x => x.LogisticUnit)
             .HasForeignKey(x => x.LogisticUnitId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.RowVersion)
+            .IsRowVersion();
+
     }
 }

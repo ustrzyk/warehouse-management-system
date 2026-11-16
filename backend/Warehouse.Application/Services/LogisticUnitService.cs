@@ -6,6 +6,8 @@ using Warehouse.Application.Interfaces.Repositories;
 using Warehouse.Application.Interfaces.Services;
 using Warehouse.Domain.Entities;
 using Warehouse.Domain.Enums;
+using Warehouse.Application.DTOs.LogisticUnitMovements;
+
 
 namespace Warehouse.Application.Services;
 
@@ -126,6 +128,133 @@ public class LogisticUnitService : ILogisticUnitService
             : MapToDto(updated);
     }
 
+
+    public async Task<LogisticUnitMovementDto?> MoveAsync(
+        int id,
+        MoveLogisticUnitRequest request,
+        CancellationToken cancellationToken)
+    {
+        var unit = await _repository.GetTrackedByIdAsync(
+            id, cancellationToken);
+
+        if (unit is null)
+            return null;
+
+        if (unit.Status != LogisticUnitStatus.Stored ||
+            !unit.StorageLocationId.HasValue)
+        {
+            throw new InvalidLogisticUnitException(
+                "Przesuwac mozna tylko palety Stored z lokalizacja.");
+        }
+
+        var fromId = unit.StorageLocationId.Value;
+
+        if (fromId == request.ToStorageLocationId)
+        {
+            throw new InvalidLogisticUnitException(
+                "Lokalizacja docelowa musi byc inna niz aktualna.");
+        }
+
+        var destination = await _repository.GetValidMoveDestinationAsync(
+            fromId,
+            request.ToStorageLocationId,
+            cancellationToken);
+
+        if (destination is null)
+        {
+            throw new InvalidLogisticUnitException(
+                "Lokalizacja docelowa jest nieaktywna, " +
+                "nie istnieje lub nalezy do innego magazynu.");
+        }
+
+        var fromCode = unit.StorageLocation?.Code
+            ?? throw new InvalidOperationException(
+                "Source storage location could not be loaded.");
+
+        var movement = new LogisticUnitMovement
+        {
+            LogisticUnitId = unit.Id,
+
+            FromStorageLocationId = fromId,
+            FromLocationCode = fromCode,
+
+            ToStorageLocationId = destination.Id,
+            ToLocationCode = destination.Code,
+
+            MovedAtUtc = DateTime.UtcNow,
+
+            Note = string.IsNullOrWhiteSpace(request.Note)
+                ? null
+                : request.Note.Trim()
+        };
+
+        unit.StorageLocationId = destination.Id;
+
+        await _repository.AddMovementAsync(
+            movement, cancellationToken);
+
+        await _repository.SaveChangesAsync(
+            cancellationToken);
+
+        var created = await _repository.GetMovementByIdAsync(
+            id, movement.Id, cancellationToken);
+
+        return created is null
+            ? throw new InvalidOperationException(
+                "Created movement could not be loaded.")
+            : MapMovementToDto(created);
+    }
+
+    public async Task<PagedResult<LogisticUnitMovementDto>?>
+        GetMovementsPageAsync(
+            int id,
+            LogisticUnitMovementListQuery query,
+            CancellationToken cancellationToken)
+    {
+        var unit = await _repository.GetByIdAsync(
+            id, cancellationToken);
+
+        if (unit is null)
+            return null;
+
+        var (items, totalCount) =
+            await _repository.GetMovementsPageAsync(
+                id, query, cancellationToken);
+
+        return new PagedResult<LogisticUnitMovementDto>(
+            items.Select(MapMovementToDto).ToList(),
+            totalCount,
+            query.Page,
+            query.PageSize);
+    }
+
+    public async Task<LogisticUnitMovementDto?> GetMovementByIdAsync(
+        int id,
+        int movementId,
+        CancellationToken cancellationToken)
+    {
+        var movement = await _repository.GetMovementByIdAsync(
+            id, movementId, cancellationToken);
+
+        return movement is null
+            ? null
+            : MapMovementToDto(movement);
+    }
+
+    private static LogisticUnitMovementDto MapMovementToDto(
+        LogisticUnitMovement movement)
+    {
+        return new LogisticUnitMovementDto(
+            movement.Id,
+            movement.LogisticUnitId,
+            movement.LogisticUnit.Code,
+            movement.FromStorageLocationId,
+            movement.FromLocationCode,
+            movement.ToStorageLocationId,
+            movement.ToLocationCode,
+            movement.MovedAtUtc,
+            movement.Note);
+    }
 
     private static LogisticUnitDto MapToDto(
         LogisticUnit unit)

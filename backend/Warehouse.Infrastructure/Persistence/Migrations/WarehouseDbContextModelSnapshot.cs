@@ -38,6 +38,12 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(3)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -90,6 +96,51 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_LogisticUnitItems_Quantity_Positive", "[Quantity] > 0");
                         });
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnitMovement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FromLocationCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("FromStorageLocationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LogisticUnitId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("MovedAtUtc")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("ToLocationCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("ToStorageLocationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromStorageLocationId");
+
+                    b.HasIndex("ToStorageLocationId");
+
+                    b.HasIndex("LogisticUnitId", "MovedAtUtc");
+
+                    b.ToTable("LogisticUnitMovements", (string)null);
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>
@@ -382,6 +433,33 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("ProductBatch");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.LogisticUnitMovement", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.StorageLocation", "FromLocation")
+                        .WithMany()
+                        .HasForeignKey("FromStorageLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.LogisticUnit", "LogisticUnit")
+                        .WithMany()
+                        .HasForeignKey("LogisticUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.StorageLocation", "ToLocation")
+                        .WithMany()
+                        .HasForeignKey("ToStorageLocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromLocation");
+
+                    b.Navigation("LogisticUnit");
+
+                    b.Navigation("ToLocation");
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>

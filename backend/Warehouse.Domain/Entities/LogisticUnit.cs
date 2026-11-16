@@ -26,4 +26,7 @@ public class LogisticUnit
     // Zawartosc palety
     public ICollection<LogisticUnitItem> Items { get; set; }
         = new List<LogisticUnitItem>();
+
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
 }

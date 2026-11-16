@@ -1,6 +1,8 @@
 ﻿
 using Warehouse.Application.DTOs.LogisticUnits;
 using Warehouse.Domain.Entities;
+using Warehouse.Application.DTOs.LogisticUnitMovements;
+
 
 namespace Warehouse.Application.Interfaces.Repositories;
 
@@ -37,5 +39,27 @@ public interface ILogisticUnitRepository
     Task<bool> HasItemsAsync(
         int logisticUnitId,
         CancellationToken cancellationToken);
+
+
+    Task<StorageLocation?> GetValidMoveDestinationAsync(
+        int fromStorageLocationId,
+        int toStorageLocationId,
+        CancellationToken cancellationToken);
+
+    Task AddMovementAsync(
+        LogisticUnitMovement movement,
+        CancellationToken cancellationToken);
+
+    Task<(IReadOnlyList<LogisticUnitMovement> Items, int TotalCount)>
+        GetMovementsPageAsync(
+            int logisticUnitId,
+            LogisticUnitMovementListQuery query,
+            CancellationToken cancellationToken);
+
+    Task<LogisticUnitMovement?> GetMovementByIdAsync(
+        int logisticUnitId,
+        int movementId,
+        CancellationToken cancellationToken);
+
 
 }

@@ -42,6 +42,9 @@ public class WarehouseDbContext : DbContext
     public DbSet<LogisticUnitItem> LogisticUnitItems
         => Set<LogisticUnitItem>();
 
+    public DbSet<LogisticUnitMovement> LogisticUnitMovements
+        => Set<LogisticUnitMovement>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
