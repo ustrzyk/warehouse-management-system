@@ -48,6 +48,9 @@ public static class DependencyInjection
             IWarehouseZoneRepository,
             WarehouseZoneRepository>();
 
+        services.AddScoped<
+            IStorageLocationRepository,
+            StorageLocationRepository>();
 
 
         return services;
