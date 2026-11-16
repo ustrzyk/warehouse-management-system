@@ -57,4 +57,17 @@ public interface IGoodsReceiptRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+
+    Task<GoodsReceipt?> GetTrackedByIdAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task<GoodsReceipt?> GetTrackedWithItemsAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task AddLogisticUnitAsync(
+        LogisticUnit unit,
+        CancellationToken cancellationToken);
+
 }

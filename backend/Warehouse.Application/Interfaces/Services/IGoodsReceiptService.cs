@@ -26,4 +26,9 @@ public interface IGoodsReceiptService
         int receiptId,
         AddGoodsReceiptItemRequest request,
         CancellationToken cancellationToken);
+
+    Task<GoodsReceiptDto?> ConfirmAsync(
+        int id,
+        CancellationToken cancellationToken);
+
 }

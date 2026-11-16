@@ -39,4 +39,9 @@ public interface ILogisticUnitItemRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+
+    Task<bool> IsGeneratedByGoodsReceiptAsync(
+        int logisticUnitId,
+        CancellationToken cancellationToken);
+
 }

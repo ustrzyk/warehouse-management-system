@@ -61,5 +61,9 @@ public interface ILogisticUnitRepository
         int movementId,
         CancellationToken cancellationToken);
 
+    Task<bool> LocationIsAllowedForUnitAsync(
+        int logisticUnitId,
+        int storageLocationId,
+        CancellationToken cancellationToken);
 
 }

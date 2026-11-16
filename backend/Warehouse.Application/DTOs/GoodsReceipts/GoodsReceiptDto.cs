@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 
+
 namespace Warehouse.Application.DTOs.GoodsReceipts;
 
 public record GoodsReceiptDto(
@@ -13,5 +14,6 @@ public record GoodsReceiptDto(
     string? SupplierName,
     string Status,
     DateTime CreatedAtUtc,
-    DateTime? ReceivedAtUtc
+    DateTime? ReceivedAtUtc,
+    int? LogisticUnitId
 );

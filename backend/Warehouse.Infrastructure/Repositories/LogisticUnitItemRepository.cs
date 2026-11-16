@@ -121,4 +121,16 @@ public class LogisticUnitItemRepository
             throw new DuplicateLogisticUnitItemException(ex);
         }
     }
+
+    public Task<bool> IsGeneratedByGoodsReceiptAsync(
+        int logisticUnitId,
+        CancellationToken cancellationToken)
+    {
+        return _context.GoodsReceipts
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.LogisticUnitId == logisticUnitId,
+                cancellationToken);
+    }
+
 }

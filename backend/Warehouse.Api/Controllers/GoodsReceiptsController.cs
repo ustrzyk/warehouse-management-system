@@ -93,4 +93,22 @@ public class GoodsReceiptsController : ControllerBase
             ? NotFound()
             : StatusCode(StatusCodes.Status201Created, item);
     }
+
+
+    [HttpPost("{id:int}/confirm")]
+    public async Task<ActionResult<GoodsReceiptDto>> Confirm(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid goods receipt ID.");
+
+        var receipt = await _service.ConfirmAsync(
+            id, cancellationToken);
+
+        return receipt is null
+            ? NotFound()
+            : Ok(receipt);
+    }
+
 }

@@ -106,11 +106,11 @@ public class LogisticUnitService : ILogisticUnitService
                 "Nie mozna odlozyc pustej palety.");
         }
 
-        if (!await _repository.LocationIsActiveAsync(
-            request.StorageLocationId, cancellationToken))
+        if (!await _repository.LocationIsAllowedForUnitAsync(
+            id, request.StorageLocationId, cancellationToken))
         {
             throw new InvalidLogisticUnitException(
-                "Lokalizacja nie istnieje lub nie jest aktywna.");
+                "Lokalizacja nie jest aktywna lub nalezy do niewlasciwego magazynu.");
         }
 
         unit.StorageLocationId = request.StorageLocationId;

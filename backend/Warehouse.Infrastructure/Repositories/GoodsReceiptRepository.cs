@@ -194,6 +194,10 @@ public class GoodsReceiptRepository : IGoodsReceiptRepository
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConcurrentGoodsReceiptModificationException(ex);
+        }
         catch (DbUpdateException ex)
             when (ex.InnerException is SqlException
             { Number: 2601 or 2627 })
@@ -201,4 +205,39 @@ public class GoodsReceiptRepository : IGoodsReceiptRepository
             throw new DuplicateGoodsReceiptException(ex);
         }
     }
+
+
+
+    public Task<GoodsReceipt?> GetTrackedByIdAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        return _context.GoodsReceipts
+            .Include(x => x.Warehouse)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
+
+    public Task<GoodsReceipt?> GetTrackedWithItemsAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        return _context.GoodsReceipts
+            .Include(x => x.Warehouse)
+            .Include(x => x.Items)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
+
+    public async Task AddLogisticUnitAsync(
+        LogisticUnit unit,
+        CancellationToken cancellationToken)
+    {
+        await _context.LogisticUnits.AddAsync(
+            unit, cancellationToken);
+    }
+
+
 }

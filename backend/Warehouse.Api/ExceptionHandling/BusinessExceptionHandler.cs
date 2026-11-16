@@ -70,6 +70,13 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InvalidGoodsReceiptException =>
                 StatusCodes.Status400BadRequest,
 
+            GoodsReceiptAlreadyConfirmedException =>
+                StatusCodes.Status409Conflict,
+
+            ConcurrentGoodsReceiptModificationException =>
+                StatusCodes.Status409Conflict,
+
+
 
 
             _ => 0

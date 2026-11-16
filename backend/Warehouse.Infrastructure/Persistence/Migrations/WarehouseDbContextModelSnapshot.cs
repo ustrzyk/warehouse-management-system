@@ -33,6 +33,9 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(3)");
 
+                    b.Property<int?>("LogisticUnitId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -40,6 +43,15 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("ReceivedAtUtc")
                         .HasColumnType("datetime2(3)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -54,6 +66,10 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LogisticUnitId")
+                        .IsUnique()
+                        .HasFilter("[LogisticUnitId] IS NOT NULL");
 
                     b.HasIndex("Number")
                         .IsUnique();
@@ -477,11 +493,18 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Warehouse.Domain.Entities.GoodsReceipt", b =>
                 {
+                    b.HasOne("Warehouse.Domain.Entities.LogisticUnit", "LogisticUnit")
+                        .WithOne()
+                        .HasForeignKey("Warehouse.Domain.Entities.GoodsReceipt", "LogisticUnitId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Warehouse.Domain.Entities.Warehouse", "Warehouse")
                         .WithMany()
                         .HasForeignKey("WarehouseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("LogisticUnit");
 
                     b.Navigation("Warehouse");
                 });

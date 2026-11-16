@@ -40,5 +40,17 @@ public class GoodsReceiptConfiguration
             .WithMany()
             .HasForeignKey(x => x.WarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.Revision)
+            .IsRequired();
+
+        builder.Property(x => x.RowVersion)
+            .IsRowVersion();
+
+        builder.HasOne(x => x.LogisticUnit)
+            .WithOne()
+            .HasForeignKey<GoodsReceipt>(x => x.LogisticUnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
     }
 }

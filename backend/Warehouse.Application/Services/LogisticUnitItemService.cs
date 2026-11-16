@@ -18,6 +18,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
         _repository = repository;
     }
 
+    // Pobranie wszystkich pozycji palety
     public async Task<IReadOnlyList<LogisticUnitItemDto>?>
         GetItemsAsync(
             int logisticUnitId,
@@ -35,35 +36,52 @@ public class LogisticUnitItemService : ILogisticUnitItemService
         return items.Select(MapToDto).ToList();
     }
 
+    // Pobranie jednej pozycji palety
     public async Task<LogisticUnitItemDto?> GetByIdAsync(
         int logisticUnitId,
         int itemId,
         CancellationToken cancellationToken)
     {
         var item = await _repository.GetByIdAsync(
-            logisticUnitId, itemId, cancellationToken);
+            logisticUnitId,
+            itemId,
+            cancellationToken);
 
         return item is null ? null : MapToDto(item);
     }
 
+    // Dodanie nowej pozycji do palety
     public async Task<LogisticUnitItemDto?> CreateAsync(
         int logisticUnitId,
         CreateLogisticUnitItemRequest request,
         CancellationToken cancellationToken)
     {
+        // 1. Sprawdzenie, czy paleta istnieje
         var unit = await _repository.GetLogisticUnitAsync(
             logisticUnitId, cancellationToken);
 
         if (unit is null)
             return null;
 
-        // Na razie dodajemy pozycje tylko do nowej palety.
+        // 2. Pozycje mozna dodawac tylko do palety Created
         if (unit.Status != LogisticUnitStatus.Created)
         {
             throw new InvalidLogisticUnitItemException(
                 "Mozna dodawac pozycje tylko do palety Created.");
         }
 
+        // 3. NOWE ZABEZPIECZENIE:
+        // Nie pozwalamy zmieniac zawartosci palety,
+        // ktora powstala z zatwierdzonego GoodsReceipt.
+        if (await _repository.IsGeneratedByGoodsReceiptAsync(
+            logisticUnitId, cancellationToken))
+        {
+            throw new InvalidLogisticUnitItemException(
+                "Nie mozna recznie dodawac pozycji do palety " +
+                "utworzonej z zatwierdzonego przyjecia.");
+        }
+
+        // 4. Walidacja ilosci
         if (request.Quantity <= 0 ||
             request.Quantity > 999999999999999.999m ||
             decimal.Round(request.Quantity, 3) != request.Quantity)
@@ -73,6 +91,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
                 "3 miejsca po przecinku.");
         }
 
+        // 5. Sprawdzenie produktu
         if (!await _repository.ProductIsActiveAsync(
             request.ProductId, cancellationToken))
         {
@@ -80,6 +99,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
                 "Produkt nie istnieje lub jest nieaktywny.");
         }
 
+        // 6. Sprawdzenie partii produktu (jesli podana)
         if (request.ProductBatchId.HasValue)
         {
             var validBatch =
@@ -96,6 +116,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
             }
         }
 
+        // 7. Sprawdzenie duplikatu pozycji
         if (await _repository.ItemExistsAsync(
             logisticUnitId,
             request.ProductId,
@@ -105,6 +126,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
             throw new DuplicateLogisticUnitItemException();
         }
 
+        // 8. Przygotowanie nowej pozycji palety
         var item = new LogisticUnitItem
         {
             LogisticUnitId = logisticUnitId,
@@ -113,12 +135,14 @@ public class LogisticUnitItemService : ILogisticUnitItemService
             Quantity = request.Quantity
         };
 
+        // 9. Zapis do bazy danych
         await _repository.AddAsync(
             item, cancellationToken);
 
         await _repository.SaveChangesAsync(
             cancellationToken);
 
+        // 10. Ponowny odczyt zapisanej pozycji
         var created = await _repository.GetByIdAsync(
             logisticUnitId,
             item.Id,
@@ -129,6 +153,7 @@ public class LogisticUnitItemService : ILogisticUnitItemService
                 "Created logistic unit item could not be loaded."));
     }
 
+    // Mapowanie encji na DTO
     private static LogisticUnitItemDto MapToDto(
         LogisticUnitItem item)
     {

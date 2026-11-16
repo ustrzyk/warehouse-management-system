@@ -117,7 +117,8 @@ public class GoodsReceiptService : IGoodsReceiptService
         AddGoodsReceiptItemRequest request,
         CancellationToken cancellationToken)
     {
-        var receipt = await _repository.GetByIdAsync(
+
+        var receipt = await _repository.GetTrackedByIdAsync(
             receiptId, cancellationToken);
 
         if (receipt is null)
@@ -178,6 +179,8 @@ public class GoodsReceiptService : IGoodsReceiptService
             Quantity = request.Quantity
         };
 
+
+        receipt.Revision++;
         await _repository.AddItemAsync(
             item, cancellationToken);
 
@@ -192,6 +195,104 @@ public class GoodsReceiptService : IGoodsReceiptService
             : MapItemToDto(created);
     }
 
+
+    public async Task<GoodsReceiptDto?> ConfirmAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var receipt = await _repository.GetTrackedWithItemsAsync(
+            id, cancellationToken);
+
+        if (receipt is null)
+            return null;
+
+        if (receipt.Status != GoodsReceiptStatus.Draft ||
+            receipt.LogisticUnitId.HasValue)
+        {
+            throw new GoodsReceiptAlreadyConfirmedException();
+        }
+
+        if (!receipt.Warehouse.IsActive)
+        {
+            throw new InvalidGoodsReceiptException(
+                "Nie mozna zatwierdzic przyjecia do nieaktywnego magazynu.");
+        }
+
+        if (receipt.Items.Count == 0)
+        {
+            throw new InvalidGoodsReceiptException(
+                "Nie mozna zatwierdzic dokumentu bez pozycji.");
+        }
+
+        foreach (var item in receipt.Items)
+        {
+            if (item.Quantity <= 0 ||
+                item.Quantity > 999999999999999.999m ||
+                decimal.Round(item.Quantity, 3) != item.Quantity)
+            {
+                throw new InvalidGoodsReceiptException(
+                    "Dokument zawiera nieprawidlowa ilosc.");
+            }
+
+            if (!await _repository.ProductIsActiveAsync(
+                item.ProductId, cancellationToken))
+            {
+                throw new InvalidGoodsReceiptException(
+                    $"Produkt o ID {item.ProductId} jest nieaktywny " +
+                    "lub nie istnieje.");
+            }
+
+            if (item.ProductBatchId.HasValue)
+            {
+                var validBatch =
+                    await _repository.BatchIsActiveForProductAsync(
+                        item.ProductBatchId.Value,
+                        item.ProductId,
+                        cancellationToken);
+
+                if (!validBatch)
+                {
+                    throw new InvalidGoodsReceiptException(
+                        "Dokument zawiera nieaktywna lub " +
+                        "nieprawidlowa partie produktu.");
+                }
+            }
+        }
+
+        var logisticUnit = new LogisticUnit
+        {
+            Code = $"LE-GR-{receipt.Id:D8}",
+            Status = LogisticUnitStatus.Created,
+            StorageLocationId = null,
+            CreatedAtUtc = DateTime.UtcNow,
+
+            Items = receipt.Items.Select(item =>
+                new LogisticUnitItem
+                {
+                    ProductId = item.ProductId,
+                    ProductBatchId = item.ProductBatchId,
+                    Quantity = item.Quantity
+                }).ToList()
+        };
+
+        receipt.LogisticUnit = logisticUnit;
+        receipt.Status = GoodsReceiptStatus.Received;
+        receipt.ReceivedAtUtc = DateTime.UtcNow;
+        receipt.Revision++;
+
+        await _repository.AddLogisticUnitAsync(
+            logisticUnit, cancellationToken);
+
+        // Jeden atomowy zapis:
+        // paleta, pozycje, status i powiazanie dokumentu.
+        await _repository.SaveChangesAsync(
+            cancellationToken);
+
+        return MapToDto(receipt);
+    }
+
+
+
     private static GoodsReceiptDto MapToDto(
         GoodsReceipt receipt)
     {
@@ -203,8 +304,10 @@ public class GoodsReceiptService : IGoodsReceiptService
             receipt.SupplierName,
             receipt.Status.ToString(),
             receipt.CreatedAtUtc,
-            receipt.ReceivedAtUtc);
+            receipt.ReceivedAtUtc,
+            receipt.LogisticUnitId);
     }
+
 
     private static GoodsReceiptItemDto MapItemToDto(
         GoodsReceiptItem item)

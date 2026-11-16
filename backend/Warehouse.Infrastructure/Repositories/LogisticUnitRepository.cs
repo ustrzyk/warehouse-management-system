@@ -190,9 +190,6 @@ public class LogisticUnitRepository : ILogisticUnitRepository
                 cancellationToken);
     }
 
-
-
-
     public Task<bool> LocationIsActiveAsync(
         int storageLocationId,
         CancellationToken cancellationToken)
@@ -217,5 +214,30 @@ public class LogisticUnitRepository : ILogisticUnitRepository
                 x => x.LogisticUnitId == logisticUnitId,
                 cancellationToken);
     }
+
+    public async Task<bool> LocationIsAllowedForUnitAsync(
+        int logisticUnitId,
+        int storageLocationId,
+        CancellationToken cancellationToken)
+    {
+        var receiptWarehouseId = await _context.GoodsReceipts
+            .AsNoTracking()
+            .Where(x => x.LogisticUnitId == logisticUnitId)
+            .Select(x => (int?)x.WarehouseId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return await _context.StorageLocations
+            .AsNoTracking()
+            .AnyAsync(
+                x => x.Id == storageLocationId
+                     && x.IsActive
+                     && x.WarehouseZone.IsActive
+                     && x.WarehouseZone.Warehouse.IsActive
+                     && (!receiptWarehouseId.HasValue ||
+                         x.WarehouseZone.WarehouseId ==
+                         receiptWarehouseId.Value),
+                cancellationToken);
+    }
+
 
 }

@@ -22,6 +22,16 @@ public class GoodsReceipt
 
     public DateTime? ReceivedAtUtc { get; set; }
 
+    public int? LogisticUnitId { get; set; }
+    public LogisticUnit? LogisticUnit { get; set; }
+
+    // Zwiększany przy każdej zmianie dokumentu.
+    public int Revision { get; set; }
+
+    // SQL Server automatycznie aktualizuje tę wartość.
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
+
     public ICollection<GoodsReceiptItem> Items { get; set; }
         = new List<GoodsReceiptItem>();
 }
