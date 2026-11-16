@@ -49,6 +49,13 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InvalidWarehouseException =>
                 StatusCodes.Status400BadRequest,
 
+            DuplicateWarehouseZoneCodeException =>
+                StatusCodes.Status409Conflict,
+
+            InvalidWarehouseZoneException =>
+                StatusCodes.Status400BadRequest,
+
+
 
             _ => 0
         };

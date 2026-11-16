@@ -50,6 +50,11 @@ builder.Services.AddScoped<
     IWarehouseService,
     WarehouseService>();
 
+builder.Services.AddScoped<
+    IWarehouseZoneService,
+    WarehouseZoneService>();
+
+
 
 var app = builder.Build();
 

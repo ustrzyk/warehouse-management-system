@@ -44,6 +44,11 @@ public static class DependencyInjection
             IWarehouseRepository,
             WarehouseRepository>();
 
+        services.AddScoped<
+            IWarehouseZoneRepository,
+            WarehouseZoneRepository>();
+
+
 
         return services;
     }
