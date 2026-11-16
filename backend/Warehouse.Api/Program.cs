@@ -58,6 +58,9 @@ builder.Services.AddScoped<
     IStorageLocationService,
     StorageLocationService>();
 
+builder.Services.AddScoped<
+    IGoodsReceiptService,
+    GoodsReceiptService>();
 
 
 var app = builder.Build();

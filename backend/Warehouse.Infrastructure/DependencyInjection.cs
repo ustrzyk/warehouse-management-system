@@ -52,6 +52,11 @@ public static class DependencyInjection
             IStorageLocationRepository,
             StorageLocationRepository>();
 
+        services.AddScoped<
+            IGoodsReceiptRepository,
+            GoodsReceiptRepository>();
+
+
 
         return services;
     }
