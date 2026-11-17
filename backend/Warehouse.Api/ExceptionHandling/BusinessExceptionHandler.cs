@@ -76,6 +76,14 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             ConcurrentGoodsReceiptModificationException =>
                 StatusCodes.Status409Conflict,
 
+            DuplicateWarehouseOrderException =>
+                StatusCodes.Status409Conflict,
+
+            InvalidWarehouseOrderException =>
+                StatusCodes.Status400BadRequest,
+
+            ConcurrentWarehouseOrderModificationException =>
+                StatusCodes.Status409Conflict,
 
 
 

@@ -457,6 +457,89 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.ToTable("Warehouses", (string)null);
                 });
 
+            modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("WarehouseId", "Status");
+
+                    b.ToTable("WarehouseOrders", (string)null);
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseOrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("QuantityRequested")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<int>("WarehouseOrderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductBatchId", "ProductId");
+
+                    b.HasIndex("WarehouseOrderId", "ProductId", "ProductBatchId")
+                        .IsUnique();
+
+                    b.ToTable("WarehouseOrderItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WarehouseOrderItems_Quantity_Positive", "[QuantityRequested] > 0");
+                        });
+                });
+
             modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseZone", b =>
                 {
                     b.Property<int>("Id")
@@ -641,6 +724,44 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Navigation("WarehouseZone");
                 });
 
+            modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseOrder", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseOrderItem", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.WarehouseOrder", "WarehouseOrder")
+                        .WithMany("Items")
+                        .HasForeignKey("WarehouseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId", "ProductId")
+                        .HasPrincipalKey("Id", "ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("WarehouseOrder");
+                });
+
             modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseZone", b =>
                 {
                     b.HasOne("Warehouse.Domain.Entities.Warehouse", "Warehouse")
@@ -680,6 +801,11 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Warehouse.Domain.Entities.Warehouse", b =>
                 {
                     b.Navigation("Zones");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseOrder", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.WarehouseZone", b =>

@@ -51,6 +51,12 @@ public class WarehouseDbContext : DbContext
     public DbSet<GoodsReceiptItem> GoodsReceiptItems
         => Set<GoodsReceiptItem>();
 
+    public DbSet<WarehouseOrder> WarehouseOrders
+        => Set<WarehouseOrder>();
+
+    public DbSet<WarehouseOrderItem> WarehouseOrderItems
+        => Set<WarehouseOrderItem>();
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

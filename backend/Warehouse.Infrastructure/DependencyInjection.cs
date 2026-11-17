@@ -56,6 +56,10 @@ public static class DependencyInjection
             IGoodsReceiptRepository,
             GoodsReceiptRepository>();
 
+        services.AddScoped<
+            IWarehouseOrderRepository,
+            WarehouseOrderRepository>();
+
 
 
         return services;

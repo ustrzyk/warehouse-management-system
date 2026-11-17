@@ -62,6 +62,10 @@ builder.Services.AddScoped<
     IGoodsReceiptService,
     GoodsReceiptService>();
 
+builder.Services.AddScoped<
+    IWarehouseOrderService,
+    WarehouseOrderService>();
+
 
 var app = builder.Build();
 
