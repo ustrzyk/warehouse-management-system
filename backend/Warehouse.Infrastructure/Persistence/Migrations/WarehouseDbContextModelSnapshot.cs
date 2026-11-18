@@ -131,6 +131,9 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2(3)");
 
+                    b.Property<int>("Revision")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -176,6 +179,12 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
@@ -187,7 +196,7 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
 
                     b.ToTable("LogisticUnitItems", null, t =>
                         {
-                            t.HasCheckConstraint("CK_LogisticUnitItems_Quantity_Positive", "[Quantity] > 0");
+                            t.HasCheckConstraint("CK_LogisticUnitItems_Quantity_NonNegative", "[Quantity] >= 0");
                         });
                 });
 
@@ -234,6 +243,74 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.HasIndex("LogisticUnitId", "MovedAtUtc");
 
                     b.ToTable("LogisticUnitMovements", (string)null);
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.PickingOperation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("LogisticUnitCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("LogisticUnitId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("LogisticUnitItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PickedAtUtc")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("ProductCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<Guid>("RequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SourceLocationCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("WarehouseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WarehouseOrderItemId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LogisticUnitId");
+
+                    b.HasIndex("LogisticUnitItemId");
+
+                    b.HasIndex("RequestId")
+                        .IsUnique();
+
+                    b.HasIndex("WarehouseOrderItemId");
+
+                    b.HasIndex("WarehouseOrderId", "PickedAtUtc");
+
+                    b.ToTable("PickingOperations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PickingOperations_Quantity_Positive", "[Quantity] > 0");
+                        });
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>
@@ -684,6 +761,41 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                     b.Navigation("LogisticUnit");
 
                     b.Navigation("ToLocation");
+                });
+
+            modelBuilder.Entity("Warehouse.Domain.Entities.PickingOperation", b =>
+                {
+                    b.HasOne("Warehouse.Domain.Entities.LogisticUnit", "LogisticUnit")
+                        .WithMany()
+                        .HasForeignKey("LogisticUnitId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.LogisticUnitItem", "LogisticUnitItem")
+                        .WithMany()
+                        .HasForeignKey("LogisticUnitItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.WarehouseOrder", "WarehouseOrder")
+                        .WithMany()
+                        .HasForeignKey("WarehouseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Warehouse.Domain.Entities.WarehouseOrderItem", "WarehouseOrderItem")
+                        .WithMany()
+                        .HasForeignKey("WarehouseOrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LogisticUnit");
+
+                    b.Navigation("LogisticUnitItem");
+
+                    b.Navigation("WarehouseOrder");
+
+                    b.Navigation("WarehouseOrderItem");
                 });
 
             modelBuilder.Entity("Warehouse.Domain.Entities.Product", b =>

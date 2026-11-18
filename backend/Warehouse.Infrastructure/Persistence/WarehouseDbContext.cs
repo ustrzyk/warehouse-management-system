@@ -57,6 +57,9 @@ public class WarehouseDbContext : DbContext
     public DbSet<WarehouseOrderItem> WarehouseOrderItems
         => Set<WarehouseOrderItem>();
 
+    public DbSet<PickingOperation> PickingOperations
+        => Set<PickingOperation>();
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

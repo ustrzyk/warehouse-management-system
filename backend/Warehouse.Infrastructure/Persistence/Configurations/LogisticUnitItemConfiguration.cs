@@ -13,9 +13,11 @@ public class LogisticUnitItemConfiguration
     {
         builder.ToTable("LogisticUnitItems", table =>
         {
+
             table.HasCheckConstraint(
-                "CK_LogisticUnitItems_Quantity_Positive",
-                "[Quantity] > 0");
+                "CK_LogisticUnitItems_Quantity_NonNegative",
+                "[Quantity] >= 0");
+
         });
 
         builder.HasKey(x => x.Id);
@@ -56,5 +58,9 @@ public class LogisticUnitItemConfiguration
                 x.ProductId
             })
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.RowVersion)
+            .IsRowVersion();
+
     }
 }

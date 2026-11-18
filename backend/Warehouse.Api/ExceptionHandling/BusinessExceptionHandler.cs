@@ -91,6 +91,16 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             InsufficientWarehouseStockException =>
                 StatusCodes.Status409Conflict,
 
+            InvalidPickingOperationException =>
+                StatusCodes.Status400BadRequest,
+
+            PickingConflictException =>
+                StatusCodes.Status409Conflict,
+
+            ConcurrentPickingOperationException =>
+                StatusCodes.Status409Conflict,
+
+
 
             _ => 0
         };

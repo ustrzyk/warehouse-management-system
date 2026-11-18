@@ -26,4 +26,7 @@ public class LogisticUnitItem
 
     // Ilosc w podstawowej jednostce produktu
     public decimal Quantity { get; set; }
+
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
 }

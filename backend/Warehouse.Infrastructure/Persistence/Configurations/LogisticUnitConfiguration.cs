@@ -43,5 +43,9 @@ public class LogisticUnitConfiguration
         builder.Property(x => x.RowVersion)
             .IsRowVersion();
 
+        builder.Property(x => x.Revision)
+            .IsRequired();
+
+
     }
 }

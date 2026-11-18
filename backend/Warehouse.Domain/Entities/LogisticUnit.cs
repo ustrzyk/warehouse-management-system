@@ -27,6 +27,9 @@ public class LogisticUnit
     public ICollection<LogisticUnitItem> Items { get; set; }
         = new List<LogisticUnitItem>();
 
+    public int Revision { get; set; }
+
+
     public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
 }

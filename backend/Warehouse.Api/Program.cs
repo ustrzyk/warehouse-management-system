@@ -66,6 +66,10 @@ builder.Services.AddScoped<
     IWarehouseOrderService,
     WarehouseOrderService>();
 
+builder.Services.AddScoped<
+    IPickingService,
+    PickingService>();
+
 
 var app = builder.Build();
 

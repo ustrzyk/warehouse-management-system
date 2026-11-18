@@ -60,6 +60,9 @@ public static class DependencyInjection
             IWarehouseOrderRepository,
             WarehouseOrderRepository>();
 
+        services.AddScoped<
+            IPickingRepository,
+            PickingRepository>();
 
 
         return services;
