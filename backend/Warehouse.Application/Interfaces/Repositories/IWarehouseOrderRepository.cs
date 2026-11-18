@@ -61,4 +61,14 @@ public interface IWarehouseOrderRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken);
+
+    Task<WarehouseOrder?> GetTrackedWithItemsAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<WarehouseStockBalance>> GetAvailableStockAsync(
+        int warehouseId,
+        IReadOnlyCollection<int> productIds,
+        CancellationToken cancellationToken);
+
 }

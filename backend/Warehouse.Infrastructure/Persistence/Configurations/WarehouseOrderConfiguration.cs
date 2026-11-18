@@ -49,5 +49,8 @@ public class WarehouseOrderConfiguration
             .WithMany()
             .HasForeignKey(x => x.WarehouseId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(x => x.ReleasedAtUtc)
+            .HasColumnType("datetime2(3)");
     }
 }

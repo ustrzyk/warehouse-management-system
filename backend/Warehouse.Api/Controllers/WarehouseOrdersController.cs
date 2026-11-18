@@ -93,4 +93,21 @@ public class WarehouseOrdersController : ControllerBase
             ? NotFound()
             : StatusCode(StatusCodes.Status201Created, item);
     }
+
+    [HttpPost("{id:int}/release")]
+    public async Task<ActionResult<WarehouseOrderDto>> Release(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid warehouse order ID.");
+
+        var order = await _service.ReleaseAsync(
+            id, cancellationToken);
+
+        return order is null
+            ? NotFound()
+            : Ok(order);
+    }
+
 }

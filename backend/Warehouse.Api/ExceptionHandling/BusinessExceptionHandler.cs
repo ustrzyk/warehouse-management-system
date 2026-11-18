@@ -85,6 +85,11 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             ConcurrentWarehouseOrderModificationException =>
                 StatusCodes.Status409Conflict,
 
+            WarehouseOrderAlreadyReleasedException =>
+                StatusCodes.Status409Conflict,
+
+            InsufficientWarehouseStockException =>
+                StatusCodes.Status409Conflict,
 
 
             _ => 0

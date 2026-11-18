@@ -20,6 +20,9 @@ public class WarehouseOrder
     public DateTime CreatedAtUtc { get; set; }
         = DateTime.UtcNow;
 
+    public DateTime? ReleasedAtUtc { get; set; }
+
+
     // Zmieniany przy modyfikacji zamowienia.
     public int Revision { get; set; }
 

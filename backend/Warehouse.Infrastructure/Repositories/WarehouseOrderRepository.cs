@@ -6,6 +6,8 @@ using Warehouse.Application.Exceptions;
 using Warehouse.Application.Interfaces.Repositories;
 using Warehouse.Domain.Entities;
 using Warehouse.Infrastructure.Persistence;
+using Warehouse.Domain.Enums;
+
 
 namespace Warehouse.Infrastructure.Repositories;
 
@@ -216,4 +218,52 @@ public class WarehouseOrderRepository : IWarehouseOrderRepository
             throw new DuplicateWarehouseOrderException(ex);
         }
     }
+
+    public Task<WarehouseOrder?> GetTrackedWithItemsAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        return _context.WarehouseOrders
+            .Include(x => x.Warehouse)
+            .Include(x => x.Items)
+            .FirstOrDefaultAsync(
+                x => x.Id == id,
+                cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WarehouseStockBalance>>
+        GetAvailableStockAsync(
+            int warehouseId,
+            IReadOnlyCollection<int> productIds,
+            CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0)
+            return Array.Empty<WarehouseStockBalance>();
+
+        var ids = productIds.ToArray();
+
+        return await _context.LogisticUnitItems
+            .AsNoTracking()
+            .Where(x =>
+                ids.Contains(x.ProductId) &&
+                x.LogisticUnit.Status == LogisticUnitStatus.Stored &&
+                x.LogisticUnit.StorageLocation != null &&
+                x.LogisticUnit.StorageLocation.IsActive &&
+                x.LogisticUnit.StorageLocation.WarehouseZone.IsActive &&
+                x.LogisticUnit.StorageLocation.WarehouseZone.Warehouse.IsActive &&
+                x.LogisticUnit.StorageLocation.WarehouseZone.WarehouseId
+                    == warehouseId)
+            .GroupBy(x => new
+            {
+                x.ProductId,
+                x.ProductBatchId
+            })
+            .Select(group => new WarehouseStockBalance(
+                group.Key.ProductId,
+                group.Key.ProductBatchId,
+                group.Sum(x => x.Quantity)))
+            .ToListAsync(cancellationToken);
+    }
+
+
 }

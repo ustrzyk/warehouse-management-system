@@ -26,4 +26,9 @@ public interface IWarehouseOrderService
         int orderId,
         AddWarehouseOrderItemRequest request,
         CancellationToken cancellationToken);
+
+    Task<WarehouseOrderDto?> ReleaseAsync(
+        int id,
+        CancellationToken cancellationToken);
+
 }

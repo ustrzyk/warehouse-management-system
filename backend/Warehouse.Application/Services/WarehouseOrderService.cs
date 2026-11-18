@@ -204,6 +204,136 @@ public class WarehouseOrderService : IWarehouseOrderService
             : MapItemToDto(created);
     }
 
+    public async Task<WarehouseOrderDto?> ReleaseAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        // 1. Pobierz zamowienie z pozycjami.
+        var order = await _repository.GetTrackedWithItemsAsync(
+            id, cancellationToken);
+
+        if (order is null)
+            return null;
+
+        // 2. Tylko Draft mozna przekazac do kompletacji.
+        if (order.Status != WarehouseOrderStatus.Draft)
+        {
+            throw new WarehouseOrderAlreadyReleasedException();
+        }
+
+        // 3. Sprawdz magazyn.
+        if (!order.Warehouse.IsActive)
+        {
+            throw new InvalidWarehouseOrderException(
+                "Magazyn zamowienia jest nieaktywny.");
+        }
+
+        // 4. Zamowienie musi miec przynajmniej jedna pozycje.
+        if (order.Items.Count == 0)
+        {
+            throw new InvalidWarehouseOrderException(
+                "Nie mozna przekazac pustego zamowienia.");
+        }
+
+        // 5. Sprawdz wszystkie pozycje zamowienia.
+        foreach (var item in order.Items)
+        {
+            if (item.QuantityRequested <= 0 ||
+                item.QuantityRequested > 999999999999999.999m ||
+                decimal.Round(item.QuantityRequested, 3)
+                    != item.QuantityRequested)
+            {
+                throw new InvalidWarehouseOrderException(
+                    "Zamowienie zawiera nieprawidlowa ilosc.");
+            }
+
+            if (!await _repository.ProductIsActiveAsync(
+                item.ProductId, cancellationToken))
+            {
+                throw new InvalidWarehouseOrderException(
+                    $"Produkt ID {item.ProductId} jest nieaktywny.");
+            }
+
+            if (item.ProductBatchId.HasValue)
+            {
+                var validBatch =
+                    await _repository.BatchIsActiveForProductAsync(
+                        item.ProductBatchId.Value,
+                        item.ProductId,
+                        cancellationToken);
+
+                if (!validBatch)
+                {
+                    throw new InvalidWarehouseOrderException(
+                        $"Nieprawidlowa partia produktu ID {item.ProductId}.");
+                }
+            }
+        }
+
+        // 6. Pobierz dostepne ilosci z palet Stored.
+        var productIds = order.Items
+            .Select(x => x.ProductId)
+            .Distinct()
+            .ToArray();
+
+        var stock = await _repository.GetAvailableStockAsync(
+            order.WarehouseId,
+            productIds,
+            cancellationToken);
+
+        // 7. Zweryfikuj dostepnosc kazdego artykulu.
+        foreach (var productGroup in order.Items.GroupBy(x => x.ProductId))
+        {
+            var availableForProduct = stock
+                .Where(x => x.ProductId == productGroup.Key)
+                .ToList();
+
+            var totalAvailable = availableForProduct
+                .Sum(x => x.Quantity);
+
+            var totalRequested = productGroup
+                .Sum(x => x.QuantityRequested);
+
+            if (totalAvailable < totalRequested)
+            {
+                throw new InsufficientWarehouseStockException(
+                    $"Za malo towaru dla produktu ID {productGroup.Key}. " +
+                    $"Dostepne: {totalAvailable}, " +
+                    $"zamowione: {totalRequested}.");
+            }
+
+            // Jesli zamowienie wskazuje konkretna partie,
+            // jej ilosc rowniez musi byc wystarczajaca.
+            foreach (var item in productGroup
+                .Where(x => x.ProductBatchId.HasValue))
+            {
+                var availableBatch = availableForProduct
+                    .Where(x => x.ProductBatchId == item.ProductBatchId)
+                    .Sum(x => x.Quantity);
+
+                if (availableBatch < item.QuantityRequested)
+                {
+                    throw new InsufficientWarehouseStockException(
+                        $"Za malo towaru produktu ID {item.ProductId}, " +
+                        $"partia ID {item.ProductBatchId}. " +
+                        $"Dostepne: {availableBatch}, " +
+                        $"zamowione: {item.QuantityRequested}.");
+                }
+            }
+        }
+
+        // 8. Przekaz zamowienie do kompletacji.
+        order.Status = WarehouseOrderStatus.Released;
+        order.ReleasedAtUtc = DateTime.UtcNow;
+        order.Revision++;
+
+        // 9. Jeden zapis, z kontrola RowVersion.
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return MapToDto(order);
+    }
+
+
     private static WarehouseOrderDto MapToDto(
         WarehouseOrder order)
     {
@@ -215,8 +345,10 @@ public class WarehouseOrderService : IWarehouseOrderService
             order.CustomerName,
             order.Status.ToString(),
             order.CreatedAtUtc,
-            order.Revision);
+            order.Revision,
+            order.ReleasedAtUtc);
     }
+
 
     private static WarehouseOrderItemDto MapItemToDto(
         WarehouseOrderItem item)

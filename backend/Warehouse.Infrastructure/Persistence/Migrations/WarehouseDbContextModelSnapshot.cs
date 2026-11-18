@@ -477,6 +477,9 @@ namespace Warehouse.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("ReleasedAtUtc")
+                        .HasColumnType("datetime2(3)");
+
                     b.Property<int>("Revision")
                         .HasColumnType("int");
 
