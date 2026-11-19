@@ -11,12 +11,18 @@ namespace Warehouse.Application.Services;
 
 public class PickingService : IPickingService
 {
-    private readonly IPickingRepository _repository;
 
-    public PickingService(IPickingRepository repository)
+    private readonly IPickingRepository _repository;
+    private readonly IWarehouseOrderRepository _orderRepository;
+
+    public PickingService(
+        IPickingRepository repository,
+        IWarehouseOrderRepository orderRepository)
     {
         _repository = repository;
+        _orderRepository = orderRepository;
     }
+
 
     public async Task<PickingOperationDto?> CreateAsync(
         int orderId,
@@ -137,13 +143,24 @@ public class PickingService : IPickingService
                 "Produkt lub partia jest nieaktywna.");
         }
 
-        // 7. Sprawdz, ile juz pobrano na te pozycje zamowienia.
-        var pickedSoFar = await _repository.GetPickedQuantityAsync(
-            orderItem.Id,
-            cancellationToken);
+
+        // Pobierz postep wszystkich pozycji zamowienia.
+        var progress = await _orderRepository.GetItemProgressAsync(
+            orderId, cancellationToken);
+
+        var currentLine = progress.FirstOrDefault(
+            x => x.WarehouseOrderItemId == orderItem.Id);
+
+        if (currentLine is null)
+        {
+            throw new InvalidPickingOperationException(
+                "Nie znaleziono pozycji zamowienia.");
+        }
+
+        var pickedSoFar = currentLine.QuantityPicked;
 
         var remainingToPick =
-            orderItem.QuantityRequested - pickedSoFar;
+            currentLine.QuantityRequested - pickedSoFar;
 
         if (request.Quantity > remainingToPick)
         {
@@ -159,6 +176,7 @@ public class PickingService : IPickingService
                 $"Za malo towaru na palecie. " +
                 $"Dostepne: {palletItem.Quantity}.");
         }
+
 
         // 9. Przygotuj historyczny zapis kompletacji.
         var operation = new PickingOperation
@@ -179,12 +197,37 @@ public class PickingService : IPickingService
             PickedAtUtc = DateTime.UtcNow
         };
 
-        // 10. Zmniejsz ilosc pozostala na palecie.
+
+        // Zmniejsz ilosc pozostala na palecie.
         palletItem.Quantity -= request.Quantity;
 
-        // 11. Wymus aktualizacje RowVersion zamowienia i palety.
+        // Sprawdz, czy po tym pobraniu wszystkie pozycje
+        // zamowienia beda w pelni skompletowane.
+        var allItemsPicked = progress.Count > 0 &&
+            progress.All(line =>
+            {
+                var quantityPicked = line.QuantityPicked;
+
+                if (line.WarehouseOrderItemId == orderItem.Id)
+                {
+                    quantityPicked += request.Quantity;
+                }
+
+                return quantityPicked == line.QuantityRequested;
+            });
+
+        // Jesli to ostatnie wymagane pobranie,
+        // automatycznie zakoncz kompletacje.
+        if (allItemsPicked)
+        {
+            order.Status = WarehouseOrderStatus.Completed;
+            order.CompletedAtUtc = operation.PickedAtUtc;
+        }
+
+        // Wymus aktualizacje RowVersion zamowienia i palety.
         order.Revision++;
         pallet.Revision++;
+
 
         // 12. Dodaj historie i zapisz wszystko atomowo.
         await _repository.AddAsync(

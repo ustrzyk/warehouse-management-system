@@ -31,4 +31,9 @@ public interface IWarehouseOrderService
         int id,
         CancellationToken cancellationToken);
 
+    Task<WarehouseOrderDto?> CompleteAsync(
+        int id,
+        CancellationToken cancellationToken);
+
+
 }

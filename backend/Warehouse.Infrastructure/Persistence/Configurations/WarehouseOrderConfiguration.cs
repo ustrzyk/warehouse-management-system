@@ -52,5 +52,9 @@ public class WarehouseOrderConfiguration
 
         builder.Property(x => x.ReleasedAtUtc)
             .HasColumnType("datetime2(3)");
+
+        builder.Property(x => x.CompletedAtUtc)
+            .HasColumnType("datetime2(3)");
+
     }
 }

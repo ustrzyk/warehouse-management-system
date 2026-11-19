@@ -110,4 +110,22 @@ public class WarehouseOrdersController : ControllerBase
             : Ok(order);
     }
 
+
+    [HttpPost("{id:int}/complete")]
+    public async Task<ActionResult<WarehouseOrderDto>> Complete(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        if (id <= 0)
+            return BadRequest("Invalid warehouse order ID.");
+
+        var order = await _service.CompleteAsync(
+            id, cancellationToken);
+
+        return order is null
+            ? NotFound()
+            : Ok(order);
+    }
+
+
 }

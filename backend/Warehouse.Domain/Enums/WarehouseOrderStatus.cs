@@ -8,5 +8,6 @@ namespace Warehouse.Domain.Enums;
 public enum WarehouseOrderStatus
 {
     Draft = 0,
-    Released = 1
+    Released = 1,
+    Completed = 2
 }

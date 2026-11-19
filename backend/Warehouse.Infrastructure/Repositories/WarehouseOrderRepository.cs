@@ -265,5 +265,36 @@ public class WarehouseOrderRepository : IWarehouseOrderRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WarehouseOrderItemProgress>>
+        GetItemProgressAsync(
+            int orderId,
+            CancellationToken cancellationToken)
+    {
+        return await _context.WarehouseOrderItems
+            .AsNoTracking()
+            .Where(x => x.WarehouseOrderId == orderId)
+            .OrderBy(x => x.Id)
+            .Select(x => new WarehouseOrderItemProgress(
+                x.Id,
+                x.QuantityRequested,
+                _context.PickingOperations
+                    .Where(p => p.WarehouseOrderItemId == x.Id)
+                    .Sum(p => (decimal?)p.Quantity) ?? 0m))
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<DateTime?> GetLastPickedAtUtcAsync(
+        int orderId,
+        CancellationToken cancellationToken)
+    {
+        return _context.PickingOperations
+            .AsNoTracking()
+            .Where(x => x.WarehouseOrderId == orderId)
+            .MaxAsync(
+                x => (DateTime?)x.PickedAtUtc,
+                cancellationToken);
+    }
+
+
 
 }

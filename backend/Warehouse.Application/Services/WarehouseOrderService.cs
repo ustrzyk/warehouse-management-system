@@ -334,6 +334,62 @@ public class WarehouseOrderService : IWarehouseOrderService
     }
 
 
+    public async Task<WarehouseOrderDto?> CompleteAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        var order = await _repository.GetTrackedWithItemsAsync(
+            id, cancellationToken);
+
+        if (order is null)
+            return null;
+
+        // Ponowienie operacji nie zmienia juz zakonczonego zamowienia.
+        if (order.Status == WarehouseOrderStatus.Completed)
+            return MapToDto(order);
+
+        if (order.Status != WarehouseOrderStatus.Released)
+        {
+            throw new InvalidWarehouseOrderException(
+                "Zakonczyc mozna tylko zamowienie Released.");
+        }
+
+        if (order.Items.Count == 0)
+        {
+            throw new WarehouseOrderNotFullyPickedException(
+                "Nie mozna zakonczyc pustego zamowienia.");
+        }
+
+        var progress = await _repository.GetItemProgressAsync(
+            id, cancellationToken);
+
+        if (progress.Count != order.Items.Count ||
+            progress.Any(x =>
+                x.QuantityPicked != x.QuantityRequested))
+        {
+            throw new WarehouseOrderNotFullyPickedException(
+                "Nie wszystkie pozycje zamowienia zostaly skompletowane.");
+        }
+
+        var completedAtUtc =
+            await _repository.GetLastPickedAtUtcAsync(
+                id, cancellationToken);
+
+        if (!completedAtUtc.HasValue)
+        {
+            throw new WarehouseOrderNotFullyPickedException(
+                "Brak historii kompletacji zamowienia.");
+        }
+
+        order.Status = WarehouseOrderStatus.Completed;
+        order.CompletedAtUtc = completedAtUtc.Value;
+        order.Revision++;
+
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return MapToDto(order);
+    }
+
     private static WarehouseOrderDto MapToDto(
         WarehouseOrder order)
     {
@@ -346,8 +402,10 @@ public class WarehouseOrderService : IWarehouseOrderService
             order.Status.ToString(),
             order.CreatedAtUtc,
             order.Revision,
-            order.ReleasedAtUtc);
+            order.ReleasedAtUtc,
+            order.CompletedAtUtc);
     }
+
 
 
     private static WarehouseOrderItemDto MapItemToDto(

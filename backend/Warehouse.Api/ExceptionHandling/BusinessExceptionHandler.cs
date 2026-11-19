@@ -100,6 +100,8 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             ConcurrentPickingOperationException =>
                 StatusCodes.Status409Conflict,
 
+            WarehouseOrderNotFullyPickedException =>
+                StatusCodes.Status409Conflict,
 
 
             _ => 0

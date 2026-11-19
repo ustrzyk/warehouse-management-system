@@ -71,4 +71,14 @@ public interface IWarehouseOrderRepository
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<WarehouseOrderItemProgress>>
+        GetItemProgressAsync(
+            int orderId,
+            CancellationToken cancellationToken);
+
+    Task<DateTime?> GetLastPickedAtUtcAsync(
+        int orderId,
+        CancellationToken cancellationToken);
+
+
 }
