@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 
+
 namespace Warehouse.Application.DTOs.WarehouseOrders;
 
 public record WarehouseOrderDto(
@@ -15,5 +16,6 @@ public record WarehouseOrderDto(
     DateTime CreatedAtUtc,
     int Revision,
     DateTime? ReleasedAtUtc,
-    DateTime? CompletedAtUtc
+    DateTime? CompletedAtUtc,
+    DateTime? ShippedAtUtc
 );

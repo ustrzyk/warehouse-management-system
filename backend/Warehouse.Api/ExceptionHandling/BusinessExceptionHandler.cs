@@ -103,6 +103,16 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             WarehouseOrderNotFullyPickedException =>
                 StatusCodes.Status409Conflict,
 
+            InvalidShipmentException =>
+                StatusCodes.Status400BadRequest,
+
+            ShipmentConflictException =>
+                StatusCodes.Status409Conflict,
+
+            ConcurrentShipmentModificationException =>
+                StatusCodes.Status409Conflict,
+
+
 
             _ => 0
         };

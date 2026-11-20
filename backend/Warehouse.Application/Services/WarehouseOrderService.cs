@@ -403,8 +403,10 @@ public class WarehouseOrderService : IWarehouseOrderService
             order.CreatedAtUtc,
             order.Revision,
             order.ReleasedAtUtc,
-            order.CompletedAtUtc);
+            order.CompletedAtUtc,
+            order.ShippedAtUtc);
     }
+
 
 
 

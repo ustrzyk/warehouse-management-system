@@ -24,6 +24,8 @@ public class WarehouseOrder
 
     public DateTime? CompletedAtUtc { get; set; }
 
+    public DateTime? ShippedAtUtc { get; set; }
+
 
     // Zmieniany przy modyfikacji zamowienia.
     public int Revision { get; set; }

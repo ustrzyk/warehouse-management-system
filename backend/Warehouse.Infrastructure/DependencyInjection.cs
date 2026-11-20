@@ -64,6 +64,11 @@ public static class DependencyInjection
             IPickingRepository,
             PickingRepository>();
 
+        services.AddScoped<
+            IShipmentRepository,
+            ShipmentRepository>();
+
+
 
         return services;
     }

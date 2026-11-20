@@ -70,6 +70,11 @@ builder.Services.AddScoped<
     IPickingService,
     PickingService>();
 
+builder.Services.AddScoped<
+    IShipmentService,
+    ShipmentService>();
+
+
 
 var app = builder.Build();
 
