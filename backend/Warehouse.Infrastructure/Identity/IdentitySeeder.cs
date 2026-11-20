@@ -19,7 +19,7 @@ public static class IdentitySeeder
         var userManager = scope.ServiceProvider
             .GetRequiredService<UserManager<ApplicationUser>>();
 
-        // 1. Utworz role, jezeli jeszcze nie istnieja.
+        // Create missing roles
         string[] roles =
         {
             WarehouseRoles.Administrator,
@@ -35,10 +35,12 @@ public static class IdentitySeeder
             var result = await roleManager.CreateAsync(
                 new IdentityRole(roleName));
 
-            EnsureSuccess(result, $"Tworzenie roli {roleName}");
+            EnsureSuccess(
+                result,
+                $"Tworzenie roli {roleName}");
         }
 
-        // 2. Odczytaj dane administratora z konfiguracji.
+        // Read administrator credentials
         var email = configuration["BootstrapAdmin:Email"]?.Trim();
         var password = configuration["BootstrapAdmin:Password"];
 
@@ -49,42 +51,64 @@ public static class IdentitySeeder
                 "Brak konfiguracji BootstrapAdmin w User Secrets.");
         }
 
-        // 3. Nie tworz ponownie istniejacego uzytkownika.
+        // Check existing administrator
         var existingUser = await userManager.FindByEmailAsync(email);
 
         if (existingUser is not null)
         {
             if (!await userManager.IsInRoleAsync(
-                existingUser, WarehouseRoles.Administrator))
+                existingUser,
+                WarehouseRoles.Administrator))
             {
                 throw new InvalidOperationException(
                     "Konto BootstrapAdmin istnieje, " +
                     "ale nie ma roli Administrator.");
             }
 
+            // Enable account lockout for existing admin
+            if (!await userManager.GetLockoutEnabledAsync(
+                existingUser))
+            {
+                var lockoutResult =
+                    await userManager.SetLockoutEnabledAsync(
+                        existingUser,
+                        true);
+
+                EnsureSuccess(
+                    lockoutResult,
+                    "Wlaczenie blokowania administratora");
+            }
+
             return;
         }
 
-        // 4. Utworz pierwszego administratora.
+        // Create initial administrator
         var admin = new ApplicationUser
         {
             UserName = email,
             Email = email,
             EmailConfirmed = true,
             FullName = "Development Administrator",
-            IsActive = true
+            IsActive = true,
+            LockoutEnabled = true
         };
 
         var createResult = await userManager.CreateAsync(
-            admin, password);
+            admin,
+            password);
 
-        EnsureSuccess(createResult, "Tworzenie administratora");
+        EnsureSuccess(
+            createResult,
+            "Tworzenie administratora");
 
-        // 5. Przypisz role Administrator.
+        // Assign Administrator role
         var roleResult = await userManager.AddToRoleAsync(
-            admin, WarehouseRoles.Administrator);
+            admin,
+            WarehouseRoles.Administrator);
 
-        EnsureSuccess(roleResult, "Przypisywanie roli Administrator");
+        EnsureSuccess(
+            roleResult,
+            "Przypisywanie roli Administrator");
     }
 
     private static void EnsureSuccess(
