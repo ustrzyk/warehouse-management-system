@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.StorageLocations;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -46,6 +48,7 @@ public class StorageLocationsController : ControllerBase
             : Ok(location);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPost]
     public async Task<ActionResult<StorageLocationDto>> Create(
         [FromBody] CreateStorageLocationRequest request,
@@ -60,6 +63,7 @@ public class StorageLocationsController : ControllerBase
             location);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<StorageLocationDto>> Update(
         int id,
@@ -77,6 +81,7 @@ public class StorageLocationsController : ControllerBase
             : Ok(location);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,

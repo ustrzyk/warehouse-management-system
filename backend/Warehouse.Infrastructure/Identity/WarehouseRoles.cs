@@ -7,7 +7,11 @@ public static class WarehouseRoles
     public const string WarehouseWorker = "WarehouseWorker";
     public const string Manager = "Manager";
 
-    // Roles allowed to manage the product catalog.
+    // Product catalog permissions
     public const string CatalogEditors =
+        Administrator + "," + Manager;
+
+    // Warehouse structure permissions
+    public const string StructureEditors =
         Administrator + "," + Manager;
 }

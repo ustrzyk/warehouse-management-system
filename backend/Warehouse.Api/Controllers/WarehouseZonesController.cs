@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.WarehouseZones;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -41,9 +43,12 @@ public class WarehouseZonesController : ControllerBase
         var zone = await _service.GetByIdAsync(
             id, cancellationToken);
 
-        return zone is null ? NotFound() : Ok(zone);
+        return zone is null
+            ? NotFound()
+            : Ok(zone);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPost]
     public async Task<ActionResult<WarehouseZoneDto>> Create(
         [FromBody] CreateWarehouseZoneRequest request,
@@ -58,6 +63,7 @@ public class WarehouseZonesController : ControllerBase
             zone);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<WarehouseZoneDto>> Update(
         int id,
@@ -70,9 +76,12 @@ public class WarehouseZonesController : ControllerBase
         var zone = await _service.UpdateAsync(
             id, request, cancellationToken);
 
-        return zone is null ? NotFound() : Ok(zone);
+        return zone is null
+            ? NotFound()
+            : Ok(zone);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,
@@ -84,6 +93,8 @@ public class WarehouseZonesController : ControllerBase
         var deactivated = await _service.DeactivateAsync(
             id, cancellationToken);
 
-        return deactivated ? NoContent() : NotFound();
+        return deactivated
+            ? NoContent()
+            : NotFound();
     }
 }

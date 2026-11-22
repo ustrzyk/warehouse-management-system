@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.Warehouses;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -12,7 +14,8 @@ public class WarehousesController : ControllerBase
 {
     private readonly IWarehouseService _service;
 
-    public WarehousesController(IWarehouseService service)
+    public WarehousesController(
+        IWarehouseService service)
     {
         _service = service;
     }
@@ -39,9 +42,12 @@ public class WarehousesController : ControllerBase
         var result = await _service.GetByIdAsync(
             id, cancellationToken);
 
-        return result is null ? NotFound() : Ok(result);
+        return result is null
+            ? NotFound()
+            : Ok(result);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPost]
     public async Task<ActionResult<WarehouseDto>> Create(
         [FromBody] CreateWarehouseRequest request,
@@ -56,6 +62,7 @@ public class WarehousesController : ControllerBase
             result);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<WarehouseDto>> Update(
         int id,
@@ -68,9 +75,12 @@ public class WarehousesController : ControllerBase
         var result = await _service.UpdateAsync(
             id, request, cancellationToken);
 
-        return result is null ? NotFound() : Ok(result);
+        return result is null
+            ? NotFound()
+            : Ok(result);
     }
 
+    [Authorize(Roles = WarehouseRoles.StructureEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,
@@ -82,6 +92,8 @@ public class WarehousesController : ControllerBase
         var deactivated = await _service.DeactivateAsync(
             id, cancellationToken);
 
-        return deactivated ? NoContent() : NotFound();
+        return deactivated
+            ? NoContent()
+            : NotFound();
     }
 }
