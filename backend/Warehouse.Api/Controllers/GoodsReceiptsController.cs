@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.GoodsReceipts;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -46,6 +48,7 @@ public class GoodsReceiptsController : ControllerBase
             : Ok(receipt);
     }
 
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost]
     public async Task<ActionResult<GoodsReceiptDto>> Create(
         [FromBody] CreateGoodsReceiptRequest request,
@@ -77,6 +80,7 @@ public class GoodsReceiptsController : ControllerBase
             : Ok(items);
     }
 
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost("{id:int}/items")]
     public async Task<ActionResult<GoodsReceiptItemDto>> AddItem(
         int id,
@@ -94,7 +98,7 @@ public class GoodsReceiptsController : ControllerBase
             : StatusCode(StatusCodes.Status201Created, item);
     }
 
-
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost("{id:int}/confirm")]
     public async Task<ActionResult<GoodsReceiptDto>> Confirm(
         int id,
@@ -110,5 +114,4 @@ public class GoodsReceiptsController : ControllerBase
             ? NotFound()
             : Ok(receipt);
     }
-
 }

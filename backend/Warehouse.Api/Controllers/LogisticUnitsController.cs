@@ -1,10 +1,11 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.LogisticUnits;
-using Warehouse.Application.Interfaces.Services;
 using Warehouse.Application.DTOs.LogisticUnitMovements;
-
+using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -42,9 +43,12 @@ public class LogisticUnitsController : ControllerBase
         var unit = await _service.GetByIdAsync(
             id, cancellationToken);
 
-        return unit is null ? NotFound() : Ok(unit);
+        return unit is null
+            ? NotFound()
+            : Ok(unit);
     }
 
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost]
     public async Task<ActionResult<LogisticUnitDto>> Create(
         [FromBody] CreateLogisticUnitRequest request,
@@ -59,7 +63,7 @@ public class LogisticUnitsController : ControllerBase
             unit);
     }
 
-
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost("{id:int}/store")]
     public async Task<ActionResult<LogisticUnitDto>> Store(
         int id,
@@ -72,10 +76,12 @@ public class LogisticUnitsController : ControllerBase
         var unit = await _service.StoreAsync(
             id, request, cancellationToken);
 
-        return unit is null ? NotFound() : Ok(unit);
+        return unit is null
+            ? NotFound()
+            : Ok(unit);
     }
 
-
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost("{id:int}/move")]
     public async Task<ActionResult<LogisticUnitMovementDto>> Move(
         int id,
@@ -114,15 +120,17 @@ public class LogisticUnitsController : ControllerBase
         var result = await _service.GetMovementsPageAsync(
             id, query, cancellationToken);
 
-        return result is null ? NotFound() : Ok(result);
+        return result is null
+            ? NotFound()
+            : Ok(result);
     }
 
     [HttpGet("{id:int}/movements/{movementId:int}")]
     public async Task<ActionResult<LogisticUnitMovementDto>>
         GetMovementById(
-        int id,
-        int movementId,
-        CancellationToken cancellationToken)
+            int id,
+            int movementId,
+            CancellationToken cancellationToken)
     {
         if (id <= 0 || movementId <= 0)
             return BadRequest("Invalid ID.");
@@ -130,8 +138,8 @@ public class LogisticUnitsController : ControllerBase
         var result = await _service.GetMovementByIdAsync(
             id, movementId, cancellationToken);
 
-        return result is null ? NotFound() : Ok(result);
+        return result is null
+            ? NotFound()
+            : Ok(result);
     }
-
-
 }

@@ -1,7 +1,9 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.LogisticUnitItems;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -29,7 +31,9 @@ public class LogisticUnitItemsController : ControllerBase
         var items = await _service.GetItemsAsync(
             logisticUnitId, cancellationToken);
 
-        return items is null ? NotFound() : Ok(items);
+        return items is null
+            ? NotFound()
+            : Ok(items);
     }
 
     [HttpGet("{itemId:int}")]
@@ -44,9 +48,12 @@ public class LogisticUnitItemsController : ControllerBase
         var item = await _service.GetByIdAsync(
             logisticUnitId, itemId, cancellationToken);
 
-        return item is null ? NotFound() : Ok(item);
+        return item is null
+            ? NotFound()
+            : Ok(item);
     }
 
+    [Authorize(Roles = WarehouseRoles.LogisticsOperators)]
     [HttpPost]
     public async Task<ActionResult<LogisticUnitItemDto>> Create(
         int logisticUnitId,

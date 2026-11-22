@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.WarehouseOrders;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -46,6 +48,7 @@ public class WarehouseOrdersController : ControllerBase
             : Ok(order);
     }
 
+    [Authorize(Roles = WarehouseRoles.OrderManagers)]
     [HttpPost]
     public async Task<ActionResult<WarehouseOrderDto>> Create(
         [FromBody] CreateWarehouseOrderRequest request,
@@ -77,6 +80,7 @@ public class WarehouseOrdersController : ControllerBase
             : Ok(items);
     }
 
+    [Authorize(Roles = WarehouseRoles.OrderManagers)]
     [HttpPost("{id:int}/items")]
     public async Task<ActionResult<WarehouseOrderItemDto>> AddItem(
         int id,
@@ -94,6 +98,7 @@ public class WarehouseOrdersController : ControllerBase
             : StatusCode(StatusCodes.Status201Created, item);
     }
 
+    [Authorize(Roles = WarehouseRoles.OrderManagers)]
     [HttpPost("{id:int}/release")]
     public async Task<ActionResult<WarehouseOrderDto>> Release(
         int id,
@@ -110,7 +115,7 @@ public class WarehouseOrdersController : ControllerBase
             : Ok(order);
     }
 
-
+    [Authorize(Roles = WarehouseRoles.OrderManagers)]
     [HttpPost("{id:int}/complete")]
     public async Task<ActionResult<WarehouseOrderDto>> Complete(
         int id,
@@ -126,6 +131,4 @@ public class WarehouseOrdersController : ControllerBase
             ? NotFound()
             : Ok(order);
     }
-
-
 }
