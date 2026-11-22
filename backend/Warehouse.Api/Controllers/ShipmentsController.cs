@@ -1,7 +1,9 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Shipments;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -48,6 +50,9 @@ public class ShipmentsController : ControllerBase
             : Ok(shipment);
     }
 
+    [Authorize(
+        Roles = WarehouseRoles.Administrator + "," +
+                WarehouseRoles.Manager)]
     [HttpPost]
     public async Task<ActionResult<ShipmentDto>> Create(
         [FromBody] CreateShipmentRequest request,
@@ -62,6 +67,9 @@ public class ShipmentsController : ControllerBase
             shipment);
     }
 
+    [Authorize(
+        Roles = WarehouseRoles.Administrator + "," +
+                WarehouseRoles.Manager)]
     [HttpPost("{id:int}/dispatch")]
     public async Task<ActionResult<ShipmentDto>> Dispatch(
         int id,

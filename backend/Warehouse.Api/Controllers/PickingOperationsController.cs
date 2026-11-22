@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.Picking;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -17,6 +19,9 @@ public class PickingOperationsController : ControllerBase
         _service = service;
     }
 
+    [Authorize(
+        Roles = WarehouseRoles.Administrator + "," +
+                WarehouseRoles.WarehouseWorker)]
     [HttpPost]
     public async Task<ActionResult<PickingOperationDto>> Create(
         int orderId,
@@ -29,8 +34,7 @@ public class PickingOperationsController : ControllerBase
         var operation = await _service.CreateAsync(
             orderId, request, cancellationToken);
 
-        // HTTP 200 zarowno dla nowego pobrania,
-        // jak i bezpiecznego powtorzenia tego samego RequestId.
+        // Also returns HTTP 200 for an idempotent retry.
         return operation is null
             ? NotFound()
             : Ok(operation);
