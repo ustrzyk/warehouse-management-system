@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.Products;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -12,8 +14,7 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _service;
 
-    public ProductsController(
-        IProductService service)
+    public ProductsController(IProductService service)
     {
         _service = service;
     }
@@ -24,8 +25,7 @@ public class ProductsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _service.GetPageAsync(
-            query,
-            cancellationToken);
+            query, cancellationToken);
 
         return Ok(result);
     }
@@ -39,22 +39,21 @@ public class ProductsController : ControllerBase
             return BadRequest("Invalid product ID.");
 
         var product = await _service.GetByIdAsync(
-            id,
-            cancellationToken);
+            id, cancellationToken);
 
         return product is null
             ? NotFound()
             : Ok(product);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPost]
     public async Task<ActionResult<ProductDto>> Create(
         [FromBody] CreateProductRequest request,
         CancellationToken cancellationToken)
     {
         var product = await _service.CreateAsync(
-            request,
-            cancellationToken);
+            request, cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -62,6 +61,7 @@ public class ProductsController : ControllerBase
             product);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ProductDto>> Update(
         int id,
@@ -72,15 +72,14 @@ public class ProductsController : ControllerBase
             return BadRequest("Invalid product ID.");
 
         var product = await _service.UpdateAsync(
-            id,
-            request,
-            cancellationToken);
+            id, request, cancellationToken);
 
         return product is null
             ? NotFound()
             : Ok(product);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,
@@ -90,9 +89,10 @@ public class ProductsController : ControllerBase
             return BadRequest("Invalid product ID.");
 
         var deactivated = await _service.DeactivateAsync(
-            id,
-            cancellationToken);
+            id, cancellationToken);
 
-        return deactivated ? NoContent() : NotFound();
+        return deactivated
+            ? NoContent()
+            : NotFound();
     }
 }

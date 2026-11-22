@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.UnitsOfMeasure;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -25,8 +27,7 @@ public class UnitsOfMeasureController : ControllerBase
             CancellationToken cancellationToken)
     {
         var result = await _service.GetPageAsync(
-            query,
-            cancellationToken);
+            query, cancellationToken);
 
         return Ok(result);
     }
@@ -40,22 +41,21 @@ public class UnitsOfMeasureController : ControllerBase
             return BadRequest("Invalid unit ID.");
 
         var unit = await _service.GetByIdAsync(
-            id,
-            cancellationToken);
+            id, cancellationToken);
 
         return unit is null
             ? NotFound()
             : Ok(unit);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPost]
     public async Task<ActionResult<UnitOfMeasureDto>> Create(
         [FromBody] CreateUnitOfMeasureRequest request,
         CancellationToken cancellationToken)
     {
         var unit = await _service.CreateAsync(
-            request,
-            cancellationToken);
+            request, cancellationToken);
 
         return CreatedAtAction(
             nameof(GetById),
@@ -63,6 +63,7 @@ public class UnitsOfMeasureController : ControllerBase
             unit);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<UnitOfMeasureDto>> Update(
         int id,
@@ -73,15 +74,14 @@ public class UnitsOfMeasureController : ControllerBase
             return BadRequest("Invalid unit ID.");
 
         var unit = await _service.UpdateAsync(
-            id,
-            request,
-            cancellationToken);
+            id, request, cancellationToken);
 
         return unit is null
             ? NotFound()
             : Ok(unit);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,
@@ -91,9 +91,10 @@ public class UnitsOfMeasureController : ControllerBase
             return BadRequest("Invalid unit ID.");
 
         var deactivated = await _service.DeactivateAsync(
-            id,
-            cancellationToken);
+            id, cancellationToken);
 
-        return deactivated ? NoContent() : NotFound();
+        return deactivated
+            ? NoContent()
+            : NotFound();
     }
 }

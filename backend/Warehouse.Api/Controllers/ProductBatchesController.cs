@@ -1,8 +1,10 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Warehouse.Application.DTOs.Common;
 using Warehouse.Application.DTOs.ProductBatches;
 using Warehouse.Application.Interfaces.Services;
+using Warehouse.Infrastructure.Identity;
 
 namespace Warehouse.Api.Controllers;
 
@@ -41,9 +43,12 @@ public class ProductBatchesController : ControllerBase
         var batch = await _service.GetByIdAsync(
             id, cancellationToken);
 
-        return batch is null ? NotFound() : Ok(batch);
+        return batch is null
+            ? NotFound()
+            : Ok(batch);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPost]
     public async Task<ActionResult<ProductBatchDto>> Create(
         [FromBody] CreateProductBatchRequest request,
@@ -58,6 +63,7 @@ public class ProductBatchesController : ControllerBase
             batch);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<ProductBatchDto>> Update(
         int id,
@@ -70,9 +76,12 @@ public class ProductBatchesController : ControllerBase
         var batch = await _service.UpdateAsync(
             id, request, cancellationToken);
 
-        return batch is null ? NotFound() : Ok(batch);
+        return batch is null
+            ? NotFound()
+            : Ok(batch);
     }
 
+    [Authorize(Roles = WarehouseRoles.CatalogEditors)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(
         int id,
@@ -84,6 +93,8 @@ public class ProductBatchesController : ControllerBase
         var deactivated = await _service.DeactivateAsync(
             id, cancellationToken);
 
-        return deactivated ? NoContent() : NotFound();
+        return deactivated
+            ? NoContent()
+            : NotFound();
     }
 }
