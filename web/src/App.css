@@ -1,0 +1,244 @@
+
+#root {
+    min-height: 100vh;
+}
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #f2f5fa;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 430px;
+    background: white;
+    padding: 42px;
+    border: 1px solid #e3e8f0;
+    border-radius: 16px;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06);
+}
+
+.login-brand,
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+}
+
+.login-brand {
+    margin-bottom: 32px;
+    color: #475569;
+    font-size: 13px;
+    letter-spacing: 1px;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    background: #2563eb;
+    color: white;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.brand-icon-large {
+    width: 46px;
+    height: 46px;
+    font-size: 24px;
+}
+
+h1 {
+    margin: 0 0 12px;
+    color: #0f172a;
+    font-size: 30px;
+}
+
+.subtitle {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+    .field label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+    }
+
+    .field input {
+        padding: 13px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        outline: none;
+        background: white;
+        color: #0f172a;
+    }
+
+        .field input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+.login-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 9px;
+    background: #2563eb;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+    .login-button:hover {
+        background: #1d4ed8;
+    }
+
+button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.error-message {
+    background: #fef2f2;
+    color: #b91c1c;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+
+.login-footer {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1.7;
+    margin-top: 35px;
+}
+
+.app-page {
+    min-height: 100vh;
+    background: #f2f5fa;
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 32px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.logout-button {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 18px;
+    background: white;
+    cursor: pointer;
+}
+
+.dashboard {
+    max-width: 850px;
+    margin: 70px auto;
+    padding: 0 24px;
+}
+
+.status-label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #15803d;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+.info-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 26px;
+}
+
+    .info-card h2 {
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 24px;
+    }
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .info-row:last-child {
+        border-bottom: 0;
+    }
+
+    .info-row span {
+        color: #64748b;
+    }
+
+    .info-row strong {
+        text-align: right;
+        overflow-wrap: anywhere;
+    }
+
+.next-step {
+    margin-top: 24px;
+    color: #64748b;
+}
+
+@media (max-width: 600px) {
+    .login-card {
+        padding: 28px;
+    }
+
+    .app-header {
+        padding: 16px;
+    }
+
+    .brand {
+        font-size: 12px;
+    }
+
+    .dashboard {
+        margin: 36px auto;
+    }
+
+    .info-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+        .info-row strong {
+            text-align: left;
+        }
+}
