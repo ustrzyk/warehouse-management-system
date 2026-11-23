@@ -33,18 +33,18 @@ builder.Services.AddInfrastructure(connectionString);
 
 // JWT configuration
 var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Brak Jwt:Key.");
+    ?? throw new InvalidOperationException("Missing Jwt:Key.");
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]
-    ?? throw new InvalidOperationException("Brak Jwt:Issuer.");
+    ?? throw new InvalidOperationException("Missing Jwt:Issuer.");
 
 var jwtAudience = builder.Configuration["Jwt:Audience"]
-    ?? throw new InvalidOperationException("Brak Jwt:Audience.");
+    ?? throw new InvalidOperationException("Missing Jwt:Audience.");
 
 if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
 {
     throw new InvalidOperationException(
-        "Klucz JWT musi miec co najmniej 32 bajty.");
+        "JWT key must have at least 32 bytes.");
 }
 
 // JWT authentication
@@ -93,7 +93,24 @@ builder.Services
                 if (user is null || !user.IsActive)
                 {
                     context.Fail(
-                        "Konto nieaktywne lub nie istnieje.");
+                        "Account inactive or no longer exists.");
+                    return;
+                }
+
+                var tokenStamp = context.Principal?
+                    .FindFirstValue("security_stamp");
+
+                var currentStamp =
+                    await userManager.GetSecurityStampAsync(user);
+
+                if (string.IsNullOrEmpty(tokenStamp) ||
+                    !string.Equals(
+                        tokenStamp,
+                        currentStamp,
+                        StringComparison.Ordinal))
+                {
+                    context.Fail(
+                        "Token revoked. Please sign in again.");
                 }
             }
         };

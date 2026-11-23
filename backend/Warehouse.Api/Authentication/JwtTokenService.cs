@@ -22,18 +22,22 @@ public sealed class JwtTokenService
         _userManager = userManager;
     }
 
-    public async Task<LoginResponse> CreateAsync(ApplicationUser user)
+    public async Task<LoginResponse> CreateAsync(
+        ApplicationUser user)
     {
         var key = _configuration["Jwt:Key"]
-            ?? throw new InvalidOperationException("Brak Jwt:Key.");
+            ?? throw new InvalidOperationException("Missing Jwt:Key.");
 
         var issuer = _configuration["Jwt:Issuer"]
-            ?? throw new InvalidOperationException("Brak Jwt:Issuer.");
+            ?? throw new InvalidOperationException("Missing Jwt:Issuer.");
 
         var audience = _configuration["Jwt:Audience"]
-            ?? throw new InvalidOperationException("Brak Jwt:Audience.");
+            ?? throw new InvalidOperationException("Missing Jwt:Audience.");
 
         var roles = await _userManager.GetRolesAsync(user);
+
+        var securityStamp =
+            await _userManager.GetSecurityStampAsync(user);
 
         var claims = new List<Claim>
         {
@@ -41,7 +45,8 @@ public sealed class JwtTokenService
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Name, user.UserName ?? user.Id),
-            new(ClaimTypes.Email, user.Email ?? string.Empty)
+            new(ClaimTypes.Email, user.Email ?? string.Empty),
+            new("security_stamp", securityStamp)
         };
 
         foreach (var role in roles)
