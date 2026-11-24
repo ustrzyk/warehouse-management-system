@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# ==========================================
+# Additional React / TypeScript / VS Code
+# ==========================================
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# ESLint cache
+*.eslintcache
+
+# npm debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
