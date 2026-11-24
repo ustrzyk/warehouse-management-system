@@ -14,6 +14,17 @@ type Product = {
   isActive: boolean
 }
 
+type ProductDetail = {
+  id: number
+  code: string
+  name: string
+  description: string | null
+  ean: string | null
+  productCategoryId: number
+  unitOfMeasureId: number
+  isActive: boolean
+}
+
 type PagedResult<T> = {
   items: T[]
   totalCount: number
@@ -163,6 +174,7 @@ export default function ProductsPage({
     refreshProducts()
   }
 
+  // Dezaktywacja produktu
   async function handleDeactivate(product: Product) {
     const confirmed = window.confirm(
       `Czy na pewno chcesz dezaktywować produkt ${product.code} — ${product.name}?\n\nProdukt pozostanie w bazie danych, ale będzie nieaktywny.`
@@ -218,7 +230,108 @@ export default function ProductsPage({
     }
   }
 
+  // Ponowna aktywacja produktu
+  async function handleActivate(product: Product) {
+    setBusyId(product.id)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      // Najpierw pobieramy aktualne dane produktu.
+      const detailResponse = await fetch(
+        `/api/products/${product.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      if (detailResponse.status === 401) {
+        onUnauthorized()
+        return
+      }
+
+      if (detailResponse.status === 404) {
+        throw new Error('Nie znaleziono produktu.')
+      }
+
+      if (!detailResponse.ok) {
+        throw new Error(
+          `Nie udało się pobrać produktu (HTTP ${detailResponse.status}).`
+        )
+      }
+
+      const details =
+        (await detailResponse.json()) as ProductDetail
+
+      if (details.isActive) {
+        setSuccess(`Produkt ${details.code} jest już aktywny.`)
+        refreshProducts()
+        return
+      }
+
+      // PUT wymaga pełnych danych produktu.
+      // Zmieniamy tylko isActive na true.
+      const response = await fetch(
+        `/api/products/${product.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            code: details.code,
+            name: details.name,
+            description: details.description,
+            ean: details.ean,
+            productCategoryId: details.productCategoryId,
+            unitOfMeasureId: details.unitOfMeasureId,
+            isActive: true,
+          }),
+        }
+      )
+
+      if (response.status === 401) {
+        onUnauthorized()
+        return
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          'Nie masz uprawnień do aktywacji produktu.'
+        )
+      }
+
+      if (response.status === 404) {
+        throw new Error('Nie znaleziono produktu.')
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Nie udało się aktywować produktu (HTTP ${response.status}). Sprawdź, czy jego kategoria i jednostka miary są aktywne.`
+        )
+      }
+
+      setSuccess(
+        `Produkt ${details.code} został ponownie aktywowany.`
+      )
+
+      refreshProducts()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Wystąpił błąd aktywacji produktu.'
+      )
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const totalCount = data?.totalCount ?? 0
+
   const totalPages = Math.max(
     1,
     Math.ceil(totalCount / PAGE_SIZE)
@@ -319,7 +432,10 @@ export default function ProductsPage({
           </select>
         </div>
 
-        <button type="submit" className="button-primary">
+        <button
+          type="submit"
+          className="button-primary"
+        >
           Szukaj
         </button>
 
@@ -374,10 +490,15 @@ export default function ProductsPage({
                   <td>
                     <strong>{product.code}</strong>
                   </td>
+
                   <td>{product.name}</td>
+
                   <td>{product.productCategoryName}</td>
+
                   <td>{product.unitOfMeasureSymbol}</td>
+
                   <td>{product.ean || '—'}</td>
+
                   <td>
                     <span
                       className={
@@ -404,7 +525,7 @@ export default function ProductsPage({
                           Edytuj
                         </button>
 
-                        {product.isActive && (
+                        {product.isActive ? (
                           <button
                             type="button"
                             className="product-danger-button"
@@ -416,6 +537,19 @@ export default function ProductsPage({
                             {busyId === product.id
                               ? 'Dezaktywowanie...'
                               : 'Dezaktywuj'}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="product-activate-button"
+                            onClick={() =>
+                              void handleActivate(product)
+                            }
+                            disabled={editorOpen || busyId !== null}
+                          >
+                            {busyId === product.id
+                              ? 'Aktywowanie...'
+                              : 'Aktywuj'}
                           </button>
                         )}
                       </div>

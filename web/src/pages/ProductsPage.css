@@ -12,6 +12,8 @@
   font-size: 12px;
 }
 
+/* Dezaktywacja */
+
 .product-danger-button {
   min-height: 34px;
   padding: 7px 12px;
@@ -35,5 +37,33 @@
 
 .product-danger-button:focus-visible {
   outline: 3px solid #fca5a5;
+  outline-offset: 2px;
+}
+
+/* Ponowna aktywacja */
+
+.product-activate-button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #86efac;
+  border-radius: 9px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.product-activate-button:hover:not(:disabled) {
+  background: #dcfce7;
+}
+
+.product-activate-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-activate-button:focus-visible {
+  outline: 3px solid #86efac;
   outline-offset: 2px;
 }
