@@ -1,6 +1,8 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import ProductCreateForm from './ProductCreateForm'
+import ProductEditForm from './ProductEditForm'
+import './ProductsPage.css'
 
 type Product = {
   id: number
@@ -37,9 +39,12 @@ export default function ProductsPage({
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const [reloadKey, setReloadKey] = useState(0)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [success, setSuccess] = useState<string | null>(null)
 
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [busyId, setBusyId] = useState<number | null>(null)
+
+  const [success, setSuccess] = useState<string | null>(null)
   const [data, setData] = useState<PagedResult<Product> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +61,11 @@ export default function ProductsPage({
         PageSize: String(PAGE_SIZE),
         SortBy: 'name',
       })
-      if (search) parameters.set('Search', search)
+
+      if (search) {
+        parameters.set('Search', search)
+      }
+
       if (status !== 'all') {
         parameters.set('IsActive', String(status === 'active'))
       }
@@ -65,7 +74,9 @@ export default function ProductsPage({
         const response = await fetch(
           `/api/products?${parameters.toString()}`,
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
             signal: controller.signal,
           }
         )
@@ -74,33 +85,48 @@ export default function ProductsPage({
           onUnauthorized()
           return
         }
+
         if (!response.ok) {
           throw new Error(
             `Nie udało się pobrać produktów (HTTP ${response.status}).`
           )
         }
 
-        const result = (await response.json()) as PagedResult<Product>
-        if (!controller.signal.aborted) setData(result)
+        const result =
+          (await response.json()) as PagedResult<Product>
+
+        if (!controller.signal.aborted) {
+          setData(result)
+        }
       } catch (err) {
         if (!controller.signal.aborted) {
           setError(
-            err instanceof Error ? err.message : 'Błąd pobierania danych.'
+            err instanceof Error
+              ? err.message
+              : 'Wystąpił błąd pobierania produktów.'
           )
         }
       } finally {
-        if (!controller.signal.aborted) setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
 
     void loadProducts()
+
     return () => controller.abort()
   }, [token, page, search, status, reloadKey, onUnauthorized])
+
+  function refreshProducts() {
+    setReloadKey(value => value + 1)
+  }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPage(1)
     setSearch(searchInput.trim())
+    setSuccess(null)
   }
 
   function clearFilters() {
@@ -110,22 +136,104 @@ export default function ProductsPage({
     setPage(1)
   }
 
+  function startCreating() {
+    setEditingId(null)
+    setShowCreateForm(true)
+    setSuccess(null)
+    setError(null)
+  }
+
+  function startEditing(productId: number) {
+    setShowCreateForm(false)
+    setEditingId(productId)
+    setSuccess(null)
+    setError(null)
+  }
+
   function handleProductCreated() {
     setShowCreateForm(false)
     setSuccess('Produkt został pomyślnie dodany.')
     clearFilters()
-    setReloadKey(value => value + 1)
+    refreshProducts()
+  }
+
+  function handleProductUpdated() {
+    setEditingId(null)
+    setSuccess('Zmiany produktu zostały zapisane.')
+    refreshProducts()
+  }
+
+  async function handleDeactivate(product: Product) {
+    const confirmed = window.confirm(
+      `Czy na pewno chcesz dezaktywować produkt ${product.code} — ${product.name}?\n\nProdukt pozostanie w bazie danych, ale będzie nieaktywny.`
+    )
+
+    if (!confirmed) return
+
+    setBusyId(product.id)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.status === 401) {
+        onUnauthorized()
+        return
+      }
+
+      if (response.status === 403) {
+        throw new Error(
+          'Nie masz uprawnień do dezaktywacji produktu.'
+        )
+      }
+
+      if (response.status === 404) {
+        throw new Error('Nie znaleziono produktu.')
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `Nie udało się dezaktywować produktu (HTTP ${response.status}).`
+        )
+      }
+
+      setSuccess(`Produkt ${product.code} został dezaktywowany.`)
+      setEditingId(null)
+      setShowCreateForm(false)
+      refreshProducts()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Wystąpił błąd dezaktywacji.'
+      )
+    } finally {
+      setBusyId(null)
+    }
   }
 
   const totalCount = data?.totalCount ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const totalPages = Math.max(
+    1,
+    Math.ceil(totalCount / PAGE_SIZE)
+  )
+
+  const editorOpen = showCreateForm || editingId !== null
 
   return (
     <section className="panel">
       <div className="panel-heading">
         <div>
           <h2>Katalog produktów</h2>
-          <p>Dane pobierane bezpośrednio z ASP.NET Core i SQL Server.</p>
+          <p>
+            Dane pobierane bezpośrednio z ASP.NET Core i SQL Server.
+          </p>
         </div>
 
         <div className="panel-heading-actions">
@@ -133,19 +241,17 @@ export default function ProductsPage({
             <button
               type="button"
               className="button-primary"
-              onClick={() => {
-                setSuccess(null)
-                setShowCreateForm(true)
-              }}
-              disabled={showCreateForm}
+              onClick={startCreating}
+              disabled={editorOpen || busyId !== null}
             >
               + Dodaj produkt
             </button>
           )}
+
           <button
             type="button"
             className="button-secondary"
-            onClick={() => setReloadKey(value => value + 1)}
+            onClick={refreshProducts}
             disabled={loading}
           >
             Odśwież
@@ -154,7 +260,15 @@ export default function ProductsPage({
       </div>
 
       {success && (
-        <div className="product-success" role="status">{success}</div>
+        <div className="product-success" role="status">
+          {success}
+        </div>
+      )}
+
+      {error && (
+        <div className="error-message" role="alert">
+          {error}
+        </div>
       )}
 
       {canEditProducts && showCreateForm && (
@@ -162,6 +276,17 @@ export default function ProductsPage({
           token={token}
           onSaved={handleProductCreated}
           onCancel={() => setShowCreateForm(false)}
+          onUnauthorized={onUnauthorized}
+        />
+      )}
+
+      {canEditProducts && editingId !== null && (
+        <ProductEditForm
+          key={editingId}
+          productId={editingId}
+          token={token}
+          onSaved={handleProductUpdated}
+          onCancel={() => setEditingId(null)}
           onUnauthorized={onUnauthorized}
         />
       )}
@@ -194,13 +319,18 @@ export default function ProductsPage({
           </select>
         </div>
 
-        <button className="button-primary" type="submit">Szukaj</button>
-        <button className="button-secondary" type="button" onClick={clearFilters}>
+        <button type="submit" className="button-primary">
+          Szukaj
+        </button>
+
+        <button
+          type="button"
+          className="button-secondary"
+          onClick={clearFilters}
+        >
           Wyczyść
         </button>
       </form>
-
-      {error && <div className="error-message" role="alert">{error}</div>}
 
       <div className="results-info" aria-live="polite">
         {loading
@@ -213,7 +343,9 @@ export default function ProductsPage({
       {!loading && !error && data?.items.length === 0 && (
         <div className="empty-state">
           <strong>Brak produktów</strong>
-          <p>Nie znaleziono produktów dla podanych kryteriów.</p>
+          <p>
+            Nie znaleziono produktów dla podanych kryteriów.
+          </p>
         </div>
       )}
 
@@ -232,25 +364,63 @@ export default function ProductsPage({
                 <th>Jednostka</th>
                 <th>EAN</th>
                 <th>Status</th>
+                {canEditProducts && <th>Akcje</th>}
               </tr>
             </thead>
+
             <tbody>
               {data.items.map(product => (
                 <tr key={product.id}>
-                  <td><strong>{product.code}</strong></td>
+                  <td>
+                    <strong>{product.code}</strong>
+                  </td>
                   <td>{product.name}</td>
                   <td>{product.productCategoryName}</td>
                   <td>{product.unitOfMeasureSymbol}</td>
                   <td>{product.ean || '—'}</td>
                   <td>
-                    <span className={
-                      product.isActive
-                        ? 'status-pill active'
-                        : 'status-pill inactive'
-                    }>
-                      {product.isActive ? 'Aktywny' : 'Nieaktywny'}
+                    <span
+                      className={
+                        product.isActive
+                          ? 'status-pill active'
+                          : 'status-pill inactive'
+                      }
+                    >
+                      {product.isActive
+                        ? 'Aktywny'
+                        : 'Nieaktywny'}
                     </span>
                   </td>
+
+                  {canEditProducts && (
+                    <td>
+                      <div className="product-row-actions">
+                        <button
+                          type="button"
+                          className="button-secondary product-small-button"
+                          onClick={() => startEditing(product.id)}
+                          disabled={editorOpen || busyId !== null}
+                        >
+                          Edytuj
+                        </button>
+
+                        {product.isActive && (
+                          <button
+                            type="button"
+                            className="product-danger-button"
+                            onClick={() =>
+                              void handleDeactivate(product)
+                            }
+                            disabled={editorOpen || busyId !== null}
+                          >
+                            {busyId === product.id
+                              ? 'Dezaktywowanie...'
+                              : 'Dezaktywuj'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -260,16 +430,26 @@ export default function ProductsPage({
 
       {!loading && !error && data && totalCount > 0 && (
         <div className="pagination">
-          <span>Strona {page} z {totalPages}</span>
+          <span>
+            Strona {page} z {totalPages}
+          </span>
+
           <div className="pagination-actions">
-            <button type="button" className="button-secondary"
+            <button
+              type="button"
+              className="button-secondary"
               onClick={() => setPage(current => current - 1)}
-              disabled={page <= 1}>
+              disabled={page <= 1 || loading}
+            >
               Poprzednia
             </button>
-            <button type="button" className="button-secondary"
+
+            <button
+              type="button"
+              className="button-secondary"
               onClick={() => setPage(current => current + 1)}
-              disabled={page >= totalPages}>
+              disabled={page >= totalPages || loading}
+            >
               Następna
             </button>
           </div>

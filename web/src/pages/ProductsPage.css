@@ -1,0 +1,39 @@
+
+.product-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.product-small-button {
+  min-height: 34px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+
+.product-danger-button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fff7f7;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.product-danger-button:hover:not(:disabled) {
+  background: #fee2e2;
+}
+
+.product-danger-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.product-danger-button:focus-visible {
+  outline: 3px solid #fca5a5;
+  outline-offset: 2px;
+}
