@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import PalletMovementsPanel from './PalletMovementsPanel.tsx'
 import './PalletsPage.css'
 import './PalletWorkflow.css'
 
@@ -809,9 +810,20 @@ export default function PalletsPage({
 
               {selectedPallet.status !== 'Created' && (
                 <p className="pallet-next-step">Paleta nie jest już w statusie Created.
-                  Jej zawartość można przeglądać, ale nie można ręcznie dodawać pozycji.
-                  Przesunięcia palet między lokalizacjami dodamy w kolejnym etapie.</p>
+                  Jej zawartość można przeglądać, ale nie można ręcznie dodawać pozycji.</p>
               )}
+
+              <PalletMovementsPanel
+                key={selectedPallet.id}
+                token={token}
+                pallet={selectedPallet}
+                canMove={canCreatePallets}
+                onUnauthorized={onUnauthorized}
+                onMoved={() => {
+                  setSuccess(`Paleta ${selectedPallet.code} została przesunięta.`)
+                  refreshDetails()
+                }}
+              />
             </>
           )}
         </section>

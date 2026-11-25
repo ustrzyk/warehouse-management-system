@@ -1,0 +1,120 @@
+.pallet-movements {
+  margin-top: 28px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+}
+
+.pallet-movements-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.pallet-movements-heading h3,
+.pallet-movement-history h4 {
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+.pallet-movements-heading h3 { font-size: 19px; }
+.pallet-movement-history h4 { font-size: 17px; }
+
+.pallet-movements-heading p,
+.pallet-move-hint {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.pallet-move-form {
+  padding: 22px;
+  margin-bottom: 25px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.pallet-move-form h4 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.pallet-move-current {
+  margin: 16px 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.pallet-move-current strong { color: #0f172a; }
+
+.pallet-move-search,
+.pallet-move-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pallet-move-search label,
+.pallet-move-field label {
+  font-size: 13px;
+  font-weight: 650;
+  color: #334155;
+}
+
+.pallet-move-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pallet-move-search-row input {
+  flex: 1 1 220px;
+}
+
+.pallet-move-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.pallet-move-search input,
+.pallet-move-field input,
+.pallet-move-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.pallet-move-field select:disabled,
+.pallet-move-field input:disabled,
+.pallet-move-search input:disabled {
+  background: #f1f5f9;
+}
+
+.pallet-move-form > .button-primary { margin-top: 16px; }
+.pallet-move-form .pallet-success { margin: 14px 0; }
+.pallet-move-hint + .pallet-movement-history { margin-top: 24px; }
+
+.pallet-movement-history {
+  margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .pallet-move-fields { grid-template-columns: 1fr; }
+  .pallet-move-form { padding: 16px; }
+  .pallet-move-search-row > button { flex: 1; }
+  .pallet-movements-heading > button { width: 100%; }
+  .pallet-move-form > .button-primary { width: 100%; }
+}
