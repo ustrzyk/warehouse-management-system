@@ -1,7 +1,8 @@
 
 import { useCallback, useState, type FormEvent } from 'react'
 import ProductsPage from './pages/ProductsPage'
-import WarehousesPage from './pages/WarehousesPage'
+import WarehousesPage from './pages/WarehousesPage.tsx'
+import PalletsPage from './pages/PalletsPage'
 import './App.css'
 
 type LoginResponse = {
@@ -474,6 +475,9 @@ function App() {
   const canEditStructure =
     isAdministrator || user.roles.includes('Manager')
 
+  const canOperateLogistics =
+    isAdministrator || user.roles.includes('WarehouseWorker')
+
   return (
     <div className="app-shell">
       {mobileMenuOpen && (
@@ -620,6 +624,12 @@ function App() {
             <WarehousesPage
               token={session.token}
               canEditWarehouses={canEditStructure}
+              onUnauthorized={handleUnauthorized}
+            />
+          ) : activePage === 'pallets' ? (
+            <PalletsPage
+              token={session.token}
+              canCreatePallets={canOperateLogistics}
               onUnauthorized={handleUnauthorized}
             />
           ) : (
