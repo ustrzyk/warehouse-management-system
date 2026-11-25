@@ -198,7 +198,7 @@ public class SqlServerGoodsReceiptIntegrationTests
             Assert.Equal(3, receipt.Revision);
 
             Assert.Equal(
-                $"LE-GR-{receiptId:D8}",
+                $"LE-GR-{receiptId:D8}-AUTO",
                 pallet.Code);
 
             Assert.Equal(LogisticUnitStatus.Created, pallet.Status);
@@ -396,7 +396,7 @@ public class SqlServerGoodsReceiptIntegrationTests
                     8m);
 
                 conflictingPalletCode =
-                    $"LE-GR-{receiptId:D8}";
+                    $"LE-GR-{receiptId:D8}-AUTO";
 
                 // Occupy the code that ConfirmAsync will try to use.
 

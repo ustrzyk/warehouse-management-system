@@ -261,7 +261,7 @@ public class GoodsReceiptService : IGoodsReceiptService
 
         var logisticUnit = new LogisticUnit
         {
-            Code = $"LE-GR-{receipt.Id:D8}",
+            Code = $"LE-GR-{receipt.Id:D8}-AUTO",
             Status = LogisticUnitStatus.Created,
             StorageLocationId = null,
             CreatedAtUtc = DateTime.UtcNow,

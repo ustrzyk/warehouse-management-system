@@ -58,6 +58,13 @@ public class LogisticUnitService : ILogisticUnitService
 
         var code = request.Code.Trim().ToUpperInvariant();
 
+        if (code.StartsWith("LE-GR-", StringComparison.Ordinal))
+        {
+            throw new InvalidLogisticUnitException(
+                "Numery LE-GR- są zarezerwowane dla palet " +
+                "tworzonych automatycznie z przyjęć towaru.");
+        }
+
         if (await _repository.CodeExistsAsync(
             code, cancellationToken))
         {

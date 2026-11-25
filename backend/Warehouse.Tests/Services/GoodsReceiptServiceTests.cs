@@ -527,7 +527,7 @@ public class GoodsReceiptServiceTests
         Assert.NotNull(addedPallet);
         Assert.Same(addedPallet, receipt.LogisticUnit);
 
-        Assert.Equal("LE-GR-00000005", addedPallet!.Code);
+        Assert.Equal("LE-GR-00000005-AUTO", addedPallet!.Code);
         Assert.Equal(LogisticUnitStatus.Created, addedPallet.Status);
         Assert.Null(addedPallet.StorageLocationId);
 
