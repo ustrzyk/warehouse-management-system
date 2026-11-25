@@ -3,6 +3,7 @@ import ProductsPage from './pages/ProductsPage'
 import WarehousesPage from './pages/WarehousesPage'
 import PalletsPage from './pages/PalletsPage'
 import GoodsReceiptsPage from './pages/GoodsReceiptsPage'
+import OrdersPage from './pages/OrdersPage'
 import './App.css'
 
 type LoginResponse = {
@@ -219,6 +220,7 @@ function App() {
   const isAdministrator = user.roles.includes('Administrator')
   const canEditStructure = isAdministrator || user.roles.includes('Manager')
   const canOperateLogistics = isAdministrator || user.roles.includes('WarehouseWorker')
+  const canManageOrders = isAdministrator || user.roles.includes('Manager')
 
   return (
     <div className="app-shell">
@@ -288,11 +290,22 @@ function App() {
             <PalletsPage token={session.token} canCreatePallets={canOperateLogistics}
               onUnauthorized={handleUnauthorized} />
           ) : activePage === 'receipts' ? (
-            <GoodsReceiptsPage token={session.token} canOperateLogistics={canOperateLogistics}
-              onUnauthorized={handleUnauthorized} />
+            <GoodsReceiptsPage
+              token={session.token}
+              canOperateLogistics={canOperateLogistics}
+              onUnauthorized={handleUnauthorized}
+            />
+          ) : activePage === 'orders' ? (
+            <OrdersPage
+              token={session.token}
+              canManageOrders={canManageOrders}
+              onUnauthorized={handleUnauthorized}
+            />
           ) : (
-            <ModulePlaceholder title={pageTitles[activePage]}
-              onBack={() => navigateTo('dashboard')} />
+            <ModulePlaceholder
+              title={pageTitles[activePage]}
+              onBack={() => navigateTo('dashboard')}
+            />
           )}
         </main>
       </div>
