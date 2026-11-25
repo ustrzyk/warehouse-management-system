@@ -30,14 +30,23 @@ public class LogisticUnitService : ILogisticUnitService
                 query, cancellationToken);
 
         var palletIds = items.Select(x => x.Id).ToArray();
-        IReadOnlySet<int> receiptPalletIds = palletIds.Length == 0
-            ? new HashSet<int>()
-            : await _repository.GetGoodsReceiptPalletIdsAsync(
+        var receiptWarehouses =
+            await _repository.GetGoodsReceiptPalletWarehouseIdsAsync(
                 palletIds, cancellationToken);
 
+        var result = items.Select(unit =>
+        {
+            var fromReceipt = receiptWarehouses.TryGetValue(
+                unit.Id, out var warehouseId);
+
+            return MapToDto(
+                unit,
+                fromReceipt,
+                fromReceipt ? warehouseId : null);
+        }).ToList();
+
         return new PagedResult<LogisticUnitDto>(
-            items.Select(x => MapToDto(
-                x, receiptPalletIds.Contains(x.Id))).ToList(),
+            result,
             totalCount,
             query.Page,
             query.PageSize);
@@ -59,14 +68,18 @@ public class LogisticUnitService : ILogisticUnitService
         LogisticUnit unit,
         CancellationToken cancellationToken)
     {
-        var receiptPalletIds =
-            await _repository.GetGoodsReceiptPalletIdsAsync(
+        var receiptWarehouses =
+            await _repository.GetGoodsReceiptPalletWarehouseIdsAsync(
                 new[] { unit.Id },
                 cancellationToken);
 
+        var fromReceipt = receiptWarehouses.TryGetValue(
+            unit.Id, out var warehouseId);
+
         return MapToDto(
             unit,
-            receiptPalletIds.Contains(unit.Id));
+            fromReceipt,
+            fromReceipt ? warehouseId : null);
     }
 
     public async Task<LogisticUnitDto> CreateAsync(
@@ -288,7 +301,8 @@ public class LogisticUnitService : ILogisticUnitService
 
     private static LogisticUnitDto MapToDto(
         LogisticUnit unit,
-        bool isGeneratedByGoodsReceipt = false)
+        bool isGeneratedByGoodsReceipt = false,
+        int? sourceWarehouseId = null)
     {
         return new LogisticUnitDto(
             unit.Id,
@@ -297,6 +311,7 @@ public class LogisticUnitService : ILogisticUnitService
             unit.StorageLocationId,
             unit.StorageLocation?.Code,
             unit.CreatedAtUtc,
-            isGeneratedByGoodsReceipt);
+            isGeneratedByGoodsReceipt,
+            sourceWarehouseId);
     }
 }

@@ -11,6 +11,7 @@ type Pallet = {
   storageLocationCode: string | null
   createdAtUtc: string
   isGeneratedByGoodsReceipt: boolean
+  sourceWarehouseId: number | null
 }
 
 type PalletItem = {
@@ -40,6 +41,7 @@ type ProductBatch = {
 
 type StorageLocation = {
   id: number
+  warehouseId: number
   warehouseCode: string
   warehouseZoneCode: string
   code: string
@@ -350,9 +352,30 @@ export default function PalletsPage({
       }
       setLocationsLoading(true)
       const params = new URLSearchParams({
-        IsActive: 'true', Page: '1', PageSize: String(LOOKUP_SIZE),
+        IsActive: 'true',
+        Page: '1',
+        PageSize: String(LOOKUP_SIZE),
       })
-      if (locationSearch) params.set('Search', locationSearch)
+
+      if (selectedPallet?.isGeneratedByGoodsReceipt) {
+        if (!selectedPallet.sourceWarehouseId) {
+          setLocationsError(
+            'Nie udało się ustalić magazynu przyjęcia. ' +
+            'Nie można bezpiecznie wybrać lokalizacji.',
+          )
+          setLocationsLoading(false)
+          return
+        }
+
+        params.set(
+          'WarehouseId',
+          String(selectedPallet.sourceWarehouseId),
+        )
+      }
+
+      if (locationSearch) {
+        params.set('Search', locationSearch)
+      }
       try {
         const response = await fetch(`/api/storage-locations?${params}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -380,7 +403,15 @@ export default function PalletsPage({
     }
     void load()
     return () => controller.abort()
-  }, [token, selectedPallet?.status, items.length, locationSearch, onUnauthorized])
+  }, [
+    token,
+    selectedPallet?.status,
+    selectedPallet?.isGeneratedByGoodsReceipt,
+    selectedPallet?.sourceWarehouseId,
+    items.length,
+    locationSearch,
+    onUnauthorized,
+  ])
 
   function refresh() {
     setReload(value => value + 1)
@@ -512,6 +543,15 @@ export default function PalletsPage({
     const location = locations.find(item => item.id === locationId)
     if (!location) {
       setError('Wybrana lokalizacja nie znajduje się na aktualnej liście.')
+      return
+    }
+    if (
+      selectedPallet.isGeneratedByGoodsReceipt &&
+      location.warehouseId !== selectedPallet.sourceWarehouseId
+    ) {
+      setError(
+        'Wybrana lokalizacja należy do innego magazynu niż przyjęcie.',
+      )
       return
     }
     if (!window.confirm(

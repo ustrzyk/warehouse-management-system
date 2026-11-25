@@ -24,10 +24,11 @@ public class LogisticUnitServiceTests
     public LogisticUnitServiceTests()
     {
         _service = new LogisticUnitService(_repository.Object);
-        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+        _repository.Setup(x => x.GetGoodsReceiptPalletWarehouseIdsAsync(
                 It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int>());
+            .ReturnsAsync((IReadOnlyDictionary<int, int>)
+                new Dictionary<int, int>());
     }
 
     // ---------- Reading logistic units ----------
@@ -68,16 +69,22 @@ public class LogisticUnitServiceTests
         _repository.Setup(x => x.GetPageAsync(query, It.IsAny<CancellationToken>()))
             .ReturnsAsync(((IReadOnlyList<LogisticUnit>)
                 new[] { generated, manual }, 2));
-        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+        _repository.Setup(x => x.GetGoodsReceiptPalletWarehouseIdsAsync(
                 It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int> { UnitId });
+            .ReturnsAsync((IReadOnlyDictionary<int, int>)
+                new Dictionary<int, int>
+                {
+                    [UnitId] = 5
+                });
 
         var page = await _service.GetPageAsync(query, CancellationToken.None);
 
         Assert.True(page.Items[0].IsGeneratedByGoodsReceipt);
         Assert.False(page.Items[1].IsGeneratedByGoodsReceipt);
-        _repository.Verify(x => x.GetGoodsReceiptPalletIdsAsync(
+        Assert.Equal(5, page.Items[0].SourceWarehouseId);
+        Assert.Null(page.Items[1].SourceWarehouseId);
+        _repository.Verify(x => x.GetGoodsReceiptPalletWarehouseIdsAsync(
             It.IsAny<IReadOnlyCollection<int>>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -121,16 +128,21 @@ public class LogisticUnitServiceTests
         _repository.Setup(x => x.GetByIdAsync(
                 UnitId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestUnit());
-        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+        _repository.Setup(x => x.GetGoodsReceiptPalletWarehouseIdsAsync(
                 It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int> { UnitId });
+            .ReturnsAsync((IReadOnlyDictionary<int, int>)
+                new Dictionary<int, int>
+                {
+                    [UnitId] = 5
+                });
 
         var result = await _service.GetByIdAsync(
             UnitId, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.True(result!.IsGeneratedByGoodsReceipt);
+        Assert.Equal(5, result.SourceWarehouseId);
     }
 
     // ---------- Creating a logistic unit ----------

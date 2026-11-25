@@ -212,6 +212,7 @@ public class SqlServerGoodsReceiptIntegrationTests
                 palletId, Cancellation);
             Assert.NotNull(palletDto);
             Assert.True(palletDto!.IsGeneratedByGoodsReceipt);
+            Assert.Equal(receipt.WarehouseId, palletDto.SourceWarehouseId);
 
             Assert.Contains(pallet.Items, item =>
                 item.ProductBatchId.HasValue &&

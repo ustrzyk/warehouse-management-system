@@ -65,21 +65,29 @@ public class LogisticUnitRepository : ILogisticUnitRepository
 
     // Jedno zapytanie dla wszystkich palet na stronie listy.
     // Zrodlem informacji jest relacja w bazie, a nie prefiks numeru LE.
-    public async Task<IReadOnlySet<int>> GetGoodsReceiptPalletIdsAsync(
+    public async Task<IReadOnlyDictionary<int, int>>
+        GetGoodsReceiptPalletWarehouseIdsAsync(
         IReadOnlyCollection<int> palletIds,
         CancellationToken cancellationToken)
     {
         if (palletIds.Count == 0)
-            return new HashSet<int>();
+            return new Dictionary<int, int>();
 
-        var associatedIds = await _context.GoodsReceipts
+        var receipts = await _context.GoodsReceipts
             .AsNoTracking()
-            .Where(x => x.LogisticUnitId.HasValue &&
-                        palletIds.Contains(x.LogisticUnitId.Value))
-            .Select(x => x.LogisticUnitId!.Value)
+            .Where(x =>
+                x.LogisticUnitId.HasValue &&
+                palletIds.Contains(x.LogisticUnitId.Value))
+            .Select(x => new
+            {
+                PalletId = x.LogisticUnitId!.Value,
+                x.WarehouseId
+            })
             .ToListAsync(cancellationToken);
 
-        return associatedIds.ToHashSet();
+        return receipts.ToDictionary(
+            x => x.PalletId,
+            x => x.WarehouseId);
     }
 
     public Task<bool> CodeExistsAsync(

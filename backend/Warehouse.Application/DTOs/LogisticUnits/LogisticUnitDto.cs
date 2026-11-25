@@ -12,5 +12,6 @@ public record LogisticUnitDto(
     int? StorageLocationId,
     string? StorageLocationCode,
     DateTime CreatedAtUtc,
-    bool IsGeneratedByGoodsReceipt
+    bool IsGeneratedByGoodsReceipt,
+    int? SourceWarehouseId
 );
