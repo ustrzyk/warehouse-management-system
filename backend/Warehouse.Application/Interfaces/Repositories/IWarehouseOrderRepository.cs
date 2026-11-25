@@ -71,6 +71,12 @@ public interface IWarehouseOrderRepository
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<WarehouseStockBalance>>
+        GetOutstandingReleasedStockAsync(
+            int warehouseId,
+            IReadOnlyCollection<int> productIds,
+            CancellationToken cancellationToken);
+
     Task<IReadOnlyList<WarehouseOrderItemProgress>>
         GetItemProgressAsync(
             int orderId,

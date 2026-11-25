@@ -337,6 +337,63 @@ public class WarehouseOrderServiceTests
     }
 
     [Fact]
+    public async Task Release_StockNeededByAnotherOrder_ThrowsException()
+    {
+        var order = TestOrder();
+        order.Items.Single().QuantityRequested = 80m;
+
+        ConfigureRelease(
+            order,
+            new WarehouseStockBalance(ProductId, null, 100m));
+
+        _repository
+            .Setup(x => x.GetOutstandingReleasedStockAsync(
+                WarehouseId,
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new WarehouseStockBalance(ProductId, null, 80m)
+            });
+
+        await Assert.ThrowsAsync<InsufficientWarehouseStockException>(
+            () => _service.ReleaseAsync(
+                OrderId, CancellationToken.None));
+
+        Assert.Equal(WarehouseOrderStatus.Draft, order.Status);
+        VerifyNoSave();
+    }
+
+    [Fact]
+    public async Task Release_BatchStockNeededByAnotherOrder_ThrowsException()
+    {
+        var order = TestOrder(batchId: 7);
+        order.Items.Single().QuantityRequested = 8m;
+
+        ConfigureRelease(
+            order,
+            new WarehouseStockBalance(ProductId, 7, 10m),
+            new WarehouseStockBalance(ProductId, 8, 100m));
+
+        _repository
+            .Setup(x => x.GetOutstandingReleasedStockAsync(
+                WarehouseId,
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                new WarehouseStockBalance(ProductId, 7, 5m)
+            });
+
+        await Assert.ThrowsAsync<InsufficientWarehouseStockException>(
+            () => _service.ReleaseAsync(
+                OrderId, CancellationToken.None));
+
+        Assert.Equal(WarehouseOrderStatus.Draft, order.Status);
+        VerifyNoSave();
+    }
+
+    [Fact]
     public async Task Release_SufficientStock_ChangesStatusAndSaves()
     {
         var order = TestOrder();
@@ -485,6 +542,13 @@ public class WarehouseOrderServiceTests
                 It.IsAny<IReadOnlyCollection<int>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(stock);
+
+        _repository
+            .Setup(x => x.GetOutstandingReleasedStockAsync(
+                WarehouseId,
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WarehouseStockBalance>());
     }
 
     private void ConfigureCompletion(

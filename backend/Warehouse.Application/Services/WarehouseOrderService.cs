@@ -281,6 +281,12 @@ public class WarehouseOrderService : IWarehouseOrderService
             productIds,
             cancellationToken);
 
+        var reservedStock =
+            await _repository.GetOutstandingReleasedStockAsync(
+                order.WarehouseId,
+                productIds,
+                cancellationToken);
+
         // 7. Zweryfikuj dostepnosc kazdego artykulu.
         foreach (var productGroup in order.Items.GroupBy(x => x.ProductId))
         {
@@ -294,7 +300,14 @@ public class WarehouseOrderService : IWarehouseOrderService
             var totalRequested = productGroup
                 .Sum(x => x.QuantityRequested);
 
-            if (totalAvailable < totalRequested)
+            var reservedForProduct = reservedStock
+                .Where(x => x.ProductId == productGroup.Key)
+                .Sum(x => x.Quantity);
+
+            var availableForNewOrder =
+                totalAvailable - reservedForProduct;
+
+            if (availableForNewOrder < totalRequested)
             {
                 throw new InsufficientWarehouseStockException(
                     $"Za malo towaru dla produktu ID {productGroup.Key}. " +
@@ -311,17 +324,23 @@ public class WarehouseOrderService : IWarehouseOrderService
                     .Where(x => x.ProductBatchId == item.ProductBatchId)
                     .Sum(x => x.Quantity);
 
-                if (availableBatch < item.QuantityRequested)
-                {
+                var reservedForBatch = reservedStock
+                    .Where(x =>
+                        x.ProductId == item.ProductId &&
+                        x.ProductBatchId == item.ProductBatchId)
+                    .Sum(x => x.Quantity);
+
+                var availableBatchForNewOrder =
+                    availableBatch - reservedForBatch;
+
+                if (availableBatchForNewOrder < item.QuantityRequested)
                     throw new InsufficientWarehouseStockException(
                         $"Za malo towaru produktu ID {item.ProductId}, " +
                         $"partia ID {item.ProductBatchId}. " +
                         $"Dostepne: {availableBatch}, " +
                         $"zamowione: {item.QuantityRequested}.");
-                }
             }
         }
-
         // 8. Przekaz zamowienie do kompletacji.
         order.Status = WarehouseOrderStatus.Released;
         order.ReleasedAtUtc = DateTime.UtcNow;

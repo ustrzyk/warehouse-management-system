@@ -265,6 +265,50 @@ public class WarehouseOrderRepository : IWarehouseOrderRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WarehouseStockBalance>>
+        GetOutstandingReleasedStockAsync(
+            int warehouseId,
+            IReadOnlyCollection<int> productIds,
+            CancellationToken cancellationToken)
+    {
+        if (productIds.Count == 0)
+            return Array.Empty<WarehouseStockBalance>();
+
+        var ids = productIds.ToArray();
+
+        var lines = await _context.WarehouseOrderItems
+            .AsNoTracking()
+            .Where(x =>
+                x.WarehouseOrder.WarehouseId == warehouseId &&
+                x.WarehouseOrder.Status == WarehouseOrderStatus.Released &&
+                ids.Contains(x.ProductId))
+            .Select(x => new
+            {
+                x.ProductId,
+                x.ProductBatchId,
+                x.QuantityRequested,
+
+                QuantityPicked = _context.PickingOperations
+                    .Where(p => p.WarehouseOrderItemId == x.Id)
+                    .Sum(p => (decimal?)p.Quantity) ?? 0m
+            })
+            .ToListAsync(cancellationToken);
+
+        return lines
+            .GroupBy(x => new
+            {
+                x.ProductId,
+                x.ProductBatchId
+            })
+            .Select(group => new WarehouseStockBalance(
+                group.Key.ProductId,
+                group.Key.ProductBatchId,
+                group.Sum(x => Math.Max(
+                    0m,
+                    x.QuantityRequested - x.QuantityPicked))))
+            .ToList();
+    }
+
     public async Task<IReadOnlyList<WarehouseOrderItemProgress>>
         GetItemProgressAsync(
             int orderId,
