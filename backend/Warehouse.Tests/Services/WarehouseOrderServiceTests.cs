@@ -518,6 +518,23 @@ public class WarehouseOrderServiceTests
         params WarehouseStockBalance[] balances)
     {
         _repository
+            .Setup(x => x.GetByIdAsync(
+                OrderId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(order);
+
+        _repository
+            .Setup(x => x.ExecuteWithWarehouseReleaseLockAsync<WarehouseOrderDto?>(
+                WarehouseId,
+                It.IsAny<Func<CancellationToken,
+                    Task<WarehouseOrderDto?>>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns((
+                int _,
+                Func<CancellationToken, Task<WarehouseOrderDto?>> action,
+                CancellationToken token) => action(token));
+
+        _repository
             .Setup(x => x.GetTrackedWithItemsAsync(
                 OrderId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(order);

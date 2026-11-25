@@ -1,4 +1,5 @@
 ﻿
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Warehouse.Application.DTOs.WarehouseOrders;
@@ -18,6 +19,58 @@ public class WarehouseOrderRepository : IWarehouseOrderRepository
     public WarehouseOrderRepository(WarehouseDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<T> ExecuteWithWarehouseReleaseLockAsync<T>(
+        int warehouseId,
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(
+                IsolationLevel.ReadCommitted,
+                cancellationToken);
+
+        var resourceParameter = new SqlParameter(
+            "@LockResource", SqlDbType.NVarChar, 255)
+        {
+            Value = $"WMS.OrderRelease.Warehouse.{warehouseId}"
+        };
+
+        var resultParameter = new SqlParameter(
+            "@LockResult", SqlDbType.Int)
+        {
+            Direction = ParameterDirection.Output
+        };
+
+        await _context.Database.ExecuteSqlRawAsync(
+            """
+            EXEC @LockResult = sys.sp_getapplock
+                @Resource = @LockResource,
+                @LockMode = 'Exclusive',
+                @LockOwner = 'Transaction',
+                @LockTimeout = 10000;
+            """,
+            new object[]
+            {
+                resourceParameter,
+                resultParameter
+            },
+            cancellationToken);
+
+        if (resultParameter.Value is not int result || result < 0)
+        {
+            throw new ConcurrentWarehouseOrderModificationException(
+                new InvalidOperationException(
+                    $"Nie udało się uzyskać blokady magazynu. " +
+                    $"Kod SQL Server: {resultParameter.Value}"));
+        }
+
+        var value = await operation(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return value;
     }
 
     public async Task<(

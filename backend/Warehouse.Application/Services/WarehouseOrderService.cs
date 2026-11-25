@@ -208,7 +208,23 @@ public class WarehouseOrderService : IWarehouseOrderService
         int id,
         CancellationToken cancellationToken)
     {
-        // 1. Pobierz zamowienie z pozycjami.
+        var orderHeader = await _repository.GetByIdAsync(
+            id, cancellationToken);
+
+        if (orderHeader is null)
+            return null;
+
+        return await _repository.ExecuteWithWarehouseReleaseLockAsync(
+            orderHeader.WarehouseId,
+            ct => ReleaseLockedAsync(id, ct),
+            cancellationToken);
+    }
+
+    private async Task<WarehouseOrderDto?> ReleaseLockedAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        // Ponowny odczyt zamówienia już po uzyskaniu blokady.
         var order = await _repository.GetTrackedWithItemsAsync(
             id, cancellationToken);
 

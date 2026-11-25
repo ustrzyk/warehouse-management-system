@@ -71,6 +71,11 @@ public interface IWarehouseOrderRepository
         IReadOnlyCollection<int> productIds,
         CancellationToken cancellationToken);
 
+    Task<T> ExecuteWithWarehouseReleaseLockAsync<T>(
+        int warehouseId,
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<WarehouseStockBalance>>
         GetOutstandingReleasedStockAsync(
             int warehouseId,
