@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import OrdersDetails from './OrdersDetails'
 import {
   fetchAllPages,
   formatDate,
@@ -9,7 +10,7 @@ import {
 } from './goodsReceiptsApi'
 import './GoodsReceiptsPage.css'
 
-type Order = {
+export type Order = {
   id: number
   number: string
   warehouseId: number
@@ -48,6 +49,7 @@ export default function OrdersPage({
 }: Props) {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [data, setData] = useState<PagedResult<Order> | null>(null)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -247,6 +249,7 @@ export default function OrdersPage({
         `Utworzono zamówienie ${created.number} ze statusem Szkic.`,
       )
 
+      setSelectedId(created.id)
       setShowCreate(false)
       setNumber('')
       setCustomerName('')
@@ -497,6 +500,7 @@ export default function OrdersPage({
                   <th>Klient</th>
                   <th>Status</th>
                   <th>Data utworzenia</th>
+                  <th>Akcje</th>
                 </tr>
               </thead>
               <tbody>
@@ -511,6 +515,15 @@ export default function OrdersPage({
                       </span>
                     </td>
                     <td>{formatDate(order.createdAtUtc)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="button-secondary receipt-small-button"
+                        onClick={() => setSelectedId(order.id)}
+                      >
+                        Szczegóły
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -546,6 +559,17 @@ export default function OrdersPage({
           </div>
         )}
       </section>
+      {selectedId !== null && (
+        <OrdersDetails
+          key={selectedId}
+          orderId={selectedId}
+          token={token}
+          canManageOrders={canManageOrders}
+          onUnauthorized={onUnauthorized}
+          onClose={() => setSelectedId(null)}
+          onChanged={refresh}
+        />
+      )}
     </div>
   )
 }
