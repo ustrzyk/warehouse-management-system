@@ -29,8 +29,15 @@ public class LogisticUnitService : ILogisticUnitService
             await _repository.GetPageAsync(
                 query, cancellationToken);
 
+        var palletIds = items.Select(x => x.Id).ToArray();
+        IReadOnlySet<int> receiptPalletIds = palletIds.Length == 0
+            ? new HashSet<int>()
+            : await _repository.GetGoodsReceiptPalletIdsAsync(
+                palletIds, cancellationToken);
+
         return new PagedResult<LogisticUnitDto>(
-            items.Select(MapToDto).ToList(),
+            items.Select(x => MapToDto(
+                x, receiptPalletIds.Contains(x.Id))).ToList(),
             totalCount,
             query.Page,
             query.PageSize);
@@ -43,7 +50,23 @@ public class LogisticUnitService : ILogisticUnitService
         var unit = await _repository.GetByIdAsync(
             id, cancellationToken);
 
-        return unit is null ? null : MapToDto(unit);
+        return unit is null
+            ? null
+            : await MapWithOriginAsync(unit, cancellationToken);
+    }
+
+    private async Task<LogisticUnitDto> MapWithOriginAsync(
+        LogisticUnit unit,
+        CancellationToken cancellationToken)
+    {
+        var receiptPalletIds =
+            await _repository.GetGoodsReceiptPalletIdsAsync(
+                new[] { unit.Id },
+                cancellationToken);
+
+        return MapToDto(
+            unit,
+            receiptPalletIds.Contains(unit.Id));
     }
 
     public async Task<LogisticUnitDto> CreateAsync(
@@ -132,7 +155,7 @@ public class LogisticUnitService : ILogisticUnitService
         return updated is null
             ? throw new InvalidOperationException(
                 "Stored logistic unit could not be loaded.")
-            : MapToDto(updated);
+            : await MapWithOriginAsync(updated, cancellationToken);
     }
 
 
@@ -264,7 +287,8 @@ public class LogisticUnitService : ILogisticUnitService
     }
 
     private static LogisticUnitDto MapToDto(
-        LogisticUnit unit)
+        LogisticUnit unit,
+        bool isGeneratedByGoodsReceipt = false)
     {
         return new LogisticUnitDto(
             unit.Id,
@@ -272,6 +296,7 @@ public class LogisticUnitService : ILogisticUnitService
             unit.Status.ToString(),
             unit.StorageLocationId,
             unit.StorageLocation?.Code,
-            unit.CreatedAtUtc);
+            unit.CreatedAtUtc,
+            isGeneratedByGoodsReceipt);
     }
 }

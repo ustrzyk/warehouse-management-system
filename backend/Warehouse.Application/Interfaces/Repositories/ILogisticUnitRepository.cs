@@ -17,6 +17,10 @@ public interface ILogisticUnitRepository
         int id,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlySet<int>> GetGoodsReceiptPalletIdsAsync(
+        IReadOnlyCollection<int> palletIds,
+        CancellationToken cancellationToken);
+
     Task<bool> CodeExistsAsync(
         string code,
         CancellationToken cancellationToken);

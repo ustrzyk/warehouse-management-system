@@ -10,6 +10,7 @@ type Pallet = {
   storageLocationId: number | null
   storageLocationCode: string | null
   createdAtUtc: string
+  isGeneratedByGoodsReceipt: boolean
 }
 
 type PalletItem = {
@@ -155,6 +156,10 @@ export default function PalletsPage({
   const [locationId, setLocationId] = useState(0)
   const [working, setWorking] = useState(false)
 
+  // Zawartosc palety z przyjecia jest tylko do odczytu.
+  const canAddItems = selectedPallet?.status === 'Created' &&
+    selectedPallet?.isGeneratedByGoodsReceipt === false
+
   // Lista palet.
   useEffect(() => {
     const controller = new AbortController()
@@ -253,7 +258,7 @@ export default function PalletsPage({
       setProducts([])
       setProductsTotal(0)
       setProductsError(null)
-      if (selectedPallet?.status !== 'Created') {
+      if (!canAddItems) {
         setProductsLoading(false)
         return
       }
@@ -288,7 +293,7 @@ export default function PalletsPage({
     }
     void load()
     return () => controller.abort()
-  }, [token, selectedPallet?.status, productSearch, onUnauthorized])
+  }, [token, canAddItems, productSearch, onUnauthorized])
 
   // Partie aktywne dla wskazanego produktu.
   useEffect(() => {
@@ -296,7 +301,7 @@ export default function PalletsPage({
     async function load() {
       setBatches([])
       setBatchesError(null)
-      if (selectedPallet?.status !== 'Created' || productId === 0) {
+      if (!canAddItems || productId === 0) {
         setBatchesLoading(false)
         return
       }
@@ -330,7 +335,7 @@ export default function PalletsPage({
     }
     void load()
     return () => controller.abort()
-  }, [token, selectedPallet?.status, productId, onUnauthorized])
+  }, [token, canAddItems, productId, onUnauthorized])
 
   // Aktywne lokalizacje, potrzebne do odłożenia niepustej palety.
   useEffect(() => {
@@ -446,7 +451,7 @@ export default function PalletsPage({
 
   async function addItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!selectedPallet || selectedPallet.status !== 'Created') return
+    if (!selectedPallet || !canAddItems) return
     if (productId <= 0) {
       setError('Wybierz produkt.')
       return
@@ -701,6 +706,13 @@ export default function PalletsPage({
 
               {selectedPallet.status === 'Created' && canCreatePallets && (
                 <div className="pallet-workflow">
+                  {selectedPallet.isGeneratedByGoodsReceipt && (
+                    <p className="pallet-next-step">
+                      Ta paleta powstała automatycznie z przyjęcia towaru.
+                      Jej zawartość jest tylko do odczytu. Można ją odłożyć na lokalizację.
+                    </p>
+                  )}
+                  {canAddItems && (
                   <div className="pallet-workflow-section">
                     <h3>1. Dodaj produkt do palety</h3>
                     <p className="pallet-hint">Wybierz aktywny produkt, opcjonalną partię
@@ -760,10 +772,11 @@ export default function PalletsPage({
                       </div>
                     </form>
                   </div>
+                  )}
 
                   {items.length > 0 && (
                     <div className="pallet-workflow-section">
-                      <h3>2. Odłóż paletę na lokalizację</h3>
+                      <h3>{canAddItems ? '2.' : '1.'} Odłóż paletę na lokalizację</h3>
                       <p className="pallet-hint">Po odłożeniu paleta otrzyma status Stored.
                         Nie będzie już można dopisywać do niej pozycji.</p>
                       <form className="pallet-filters" onSubmit={event => {

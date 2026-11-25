@@ -63,6 +63,25 @@ public class LogisticUnitRepository : ILogisticUnitRepository
                 cancellationToken);
     }
 
+    // Jedno zapytanie dla wszystkich palet na stronie listy.
+    // Zrodlem informacji jest relacja w bazie, a nie prefiks numeru LE.
+    public async Task<IReadOnlySet<int>> GetGoodsReceiptPalletIdsAsync(
+        IReadOnlyCollection<int> palletIds,
+        CancellationToken cancellationToken)
+    {
+        if (palletIds.Count == 0)
+            return new HashSet<int>();
+
+        var associatedIds = await _context.GoodsReceipts
+            .AsNoTracking()
+            .Where(x => x.LogisticUnitId.HasValue &&
+                        palletIds.Contains(x.LogisticUnitId.Value))
+            .Select(x => x.LogisticUnitId!.Value)
+            .ToListAsync(cancellationToken);
+
+        return associatedIds.ToHashSet();
+    }
+
     public Task<bool> CodeExistsAsync(
         string code,
         CancellationToken cancellationToken)

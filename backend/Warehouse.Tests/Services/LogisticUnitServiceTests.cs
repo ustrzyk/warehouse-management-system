@@ -24,6 +24,10 @@ public class LogisticUnitServiceTests
     public LogisticUnitServiceTests()
     {
         _service = new LogisticUnitService(_repository.Object);
+        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int>());
     }
 
     // ---------- Reading logistic units ----------
@@ -47,7 +51,35 @@ public class LogisticUnitServiceTests
         Assert.Equal("LE-010", dto.Code);
         Assert.Equal("Stored", dto.Status);
         Assert.Equal("A-01", dto.StorageLocationCode);
+        Assert.False(dto.IsGeneratedByGoodsReceipt);
         VerifyNoSave();
+    }
+
+    [Fact]
+    public async Task GetPage_RecognizesGeneratedPalletsWithoutCheckingCodes()
+    {
+        var query = new LogisticUnitListQuery();
+        var generated = TestUnit();
+        var manual = TestUnit();
+        manual.Id = UnitId + 1;
+        manual.Code = "LE-MANUAL-001";
+        generated.Code = "LE-OTHER-CODE";
+
+        _repository.Setup(x => x.GetPageAsync(query, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(((IReadOnlyList<LogisticUnit>)
+                new[] { generated, manual }, 2));
+        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int> { UnitId });
+
+        var page = await _service.GetPageAsync(query, CancellationToken.None);
+
+        Assert.True(page.Items[0].IsGeneratedByGoodsReceipt);
+        Assert.False(page.Items[1].IsGeneratedByGoodsReceipt);
+        _repository.Verify(x => x.GetGoodsReceiptPalletIdsAsync(
+            It.IsAny<IReadOnlyCollection<int>>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -79,7 +111,26 @@ public class LogisticUnitServiceTests
         Assert.Equal(FromLocationId, result.StorageLocationId);
         Assert.Equal("A-01", result.StorageLocationCode);
         Assert.Equal(unit.CreatedAtUtc, result.CreatedAtUtc);
+        Assert.False(result.IsGeneratedByGoodsReceipt);
         VerifyNoSave();
+    }
+
+    [Fact]
+    public async Task GetById_ReceiptPallet_HasOriginFlag()
+    {
+        _repository.Setup(x => x.GetByIdAsync(
+                UnitId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(TestUnit());
+        _repository.Setup(x => x.GetGoodsReceiptPalletIdsAsync(
+                It.IsAny<IReadOnlyCollection<int>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlySet<int>)new HashSet<int> { UnitId });
+
+        var result = await _service.GetByIdAsync(
+            UnitId, CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.True(result!.IsGeneratedByGoodsReceipt);
     }
 
     // ---------- Creating a logistic unit ----------

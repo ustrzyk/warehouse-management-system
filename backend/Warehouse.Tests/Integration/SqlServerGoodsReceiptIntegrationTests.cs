@@ -206,6 +206,13 @@ public class SqlServerGoodsReceiptIntegrationTests
 
             Assert.Equal(2, pallet.Items.Count);
 
+            var logisticUnitService = new LogisticUnitService(
+                new LogisticUnitRepository(verification));
+            var palletDto = await logisticUnitService.GetByIdAsync(
+                palletId, Cancellation);
+            Assert.NotNull(palletDto);
+            Assert.True(palletDto!.IsGeneratedByGoodsReceipt);
+
             Assert.Contains(pallet.Items, item =>
                 item.ProductBatchId.HasValue &&
                 item.Quantity == 7.125m);
