@@ -14,6 +14,10 @@ type Props = {
   onChanged: () => void
 }
 
+function formatReceiptPalletCode(receiptId: number): string {
+  return `LE-GR-${String(receiptId).padStart(8, '0')}-AUTO`
+}
+
 export default function GoodsReceiptDetails({
   receiptId, token, canOperateLogistics, onUnauthorized, onClose, onChanged,
 }: Props) {
@@ -228,7 +232,7 @@ export default function GoodsReceiptDetails({
       }
       const confirmedReceipt = (await response.json()) as GoodsReceipt
       setReceipt(confirmedReceipt)
-      setSuccess(`Przyjęcie zatwierdzone. Utworzono paletę LE-GR-${String(confirmedReceipt.id).padStart(8, '0')}.`)
+      setSuccess(`Przyjęcie zatwierdzone. Utworzono paletę ${formatReceiptPalletCode(confirmedReceipt.id)}.`)
       setRefresh(current => current + 1)
       onChanged()
     } catch (err) {
@@ -351,7 +355,7 @@ export default function GoodsReceiptDetails({
           {receipt.status === 'Received' && (
             <div className="receipt-completed">
               <strong>Przyjęcie zatwierdzone.</strong>
-              <p>Powiązana paleta: <strong>LE-GR-{String(receipt.id).padStart(8, '0')}</strong> (ID: {receipt.logisticUnitId ?? '—'}). Znajdziesz ją w module „Palety LE”. Powstała ze statusem „Utworzona” i można ją odłożyć na lokalizację.</p>
+              <p>Powiązana paleta: <strong>{formatReceiptPalletCode(receipt.id)}</strong> (ID: {receipt.logisticUnitId ?? '—'}). Znajdziesz ją w module „Palety LE”. Powstała ze statusem „Utworzona” i można ją odłożyć na lokalizację.</p>
             </div>
           )}
         </>
