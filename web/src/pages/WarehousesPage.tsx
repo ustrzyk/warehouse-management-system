@@ -1,7 +1,8 @@
 
 import { useState } from 'react'
 import WarehousesListPage from './WarehousesListPage'
-import WarehouseZonesPage from './WarehouseZonesPage'
+import WarehouseZonesPage from './WarehouseZonesPage.tsx'
+import StorageLocationsPage from './StorageLocationsPage.tsx'
 import './WarehouseZonesPage.css'
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
   onUnauthorized: () => void
 }
 
-type ActiveTab = 'warehouses' | 'zones'
+type ActiveTab = 'warehouses' | 'zones' | 'locations'
 
 export default function WarehousesPage({
   token,
@@ -51,6 +52,19 @@ export default function WarehousesPage({
         >
           Strefy magazynowe
         </button>
+
+        <button
+          type="button"
+          className={
+            activeTab === 'locations'
+              ? 'structure-tab structure-tab-active'
+              : 'structure-tab'
+          }
+          aria-pressed={activeTab === 'locations'}
+          onClick={() => setActiveTab('locations')}
+        >
+          Lokalizacje składowania
+        </button>
       </div>
 
       {activeTab === 'warehouses' ? (
@@ -59,10 +73,16 @@ export default function WarehousesPage({
           canEditWarehouses={canEditWarehouses}
           onUnauthorized={onUnauthorized}
         />
-      ) : (
+      ) : activeTab === 'zones' ? (
         <WarehouseZonesPage
           token={token}
           canEditZones={canEditWarehouses}
+          onUnauthorized={onUnauthorized}
+        />
+      ) : (
+        <StorageLocationsPage
+          token={token}
+          canEditLocations={canEditWarehouses}
           onUnauthorized={onUnauthorized}
         />
       )}
