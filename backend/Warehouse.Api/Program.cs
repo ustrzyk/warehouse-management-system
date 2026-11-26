@@ -181,6 +181,10 @@ builder.Services.AddScoped<
     IShipmentService,
     ShipmentService>();
 
+builder.Services.AddScoped<
+    IStockPositionsService,
+    StockPositionsService>();
+
 var app = builder.Build();
 
 // Seeduję użytkowników testowych na devie.

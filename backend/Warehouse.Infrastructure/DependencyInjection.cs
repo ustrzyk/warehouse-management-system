@@ -95,6 +95,10 @@ public static class DependencyInjection
             IShipmentRepository,
             ShipmentRepository>();
 
+        services.AddScoped<
+            IStockPositionsRepository,
+            StockPositionsRepository>();
+
 
 
         return services;

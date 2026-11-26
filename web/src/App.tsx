@@ -2,6 +2,7 @@ import { useCallback, useState, type FormEvent } from 'react'
 import ProductsPage from './pages/ProductsPage'
 import WarehousesPage from './pages/WarehousesPage'
 import PalletsPage from './pages/PalletsPage'
+import StockPositionsPage from './pages/StockPositionsPage'
 import GoodsReceiptsPage from './pages/GoodsReceiptsPage'
 import OrdersPage from './pages/OrdersPage'
 import ShipmentsPage from './pages/ShipmentsPage'
@@ -23,8 +24,9 @@ type CurrentUser = {
 }
 
 type Session = { token: string; user: CurrentUser }
-type PageId = 'dashboard' | 'products' | 'warehouses' | 'pallets' |
-  'receipts' | 'orders' | 'shipments' | 'users'
+type PageId = 'dashboard' | 'products' | 'warehouses' |
+  'stock' | 'pallets' | 'receipts' | 'orders' |
+  'shipments' | 'users'
 type MenuItem = { id: PageId; label: string; icon: string; adminOnly?: boolean }
 type MenuGroup = { title: string; items: MenuItem[] }
 
@@ -33,6 +35,7 @@ const navigation: MenuGroup[] = [
   { title: 'MAGAZYN', items: [
     { id: 'products', label: 'Produkty', icon: '◈' },
     { id: 'warehouses', label: 'Magazyny i lokalizacje', icon: '⌂' },
+    { id: 'stock', label: 'Stany magazynowe', icon: '▤' },
     { id: 'pallets', label: 'Palety LE', icon: '▣' },
   ] },
   { title: 'OPERACJE', items: [
@@ -49,6 +52,7 @@ const pageTitles: Record<PageId, string> = {
   dashboard: 'Pulpit',
   products: 'Produkty',
   warehouses: 'Magazyny i lokalizacje',
+  stock: 'Stany magazynowe',
   pallets: 'Palety LE',
   receipts: 'Przyjęcia towaru',
   orders: 'Zamówienia i kompletacja',
@@ -59,6 +63,11 @@ const pageTitles: Record<PageId, string> = {
 const quickLinks: { id: PageId; icon: string; description: string }[] = [
   { id: 'products', icon: '◈', description: 'Katalog artykułów i ich podstawowe dane.' },
   { id: 'warehouses', icon: '⌂', description: 'Magazyny, strefy i miejsca składowania.' },
+  {
+    id: 'stock',
+    icon: '▤',
+    description: 'Stany produktów, partie, palety i lokalizacje.',
+  },
   { id: 'pallets', icon: '▣', description: 'Jednostki logistyczne i stan palet.' },
   { id: 'receipts', icon: '↙', description: 'Rejestrowanie przyjęć magazynowych.' },
   { id: 'orders', icon: '☷', description: 'Zamówienia i proces kompletacji.' },
@@ -287,6 +296,11 @@ function App() {
           ) : activePage === 'warehouses' ? (
             <WarehousesPage token={session.token} canEditWarehouses={canEditStructure}
               onUnauthorized={handleUnauthorized} />
+          ) : activePage === 'stock' ? (
+            <StockPositionsPage
+              token={session.token}
+              onUnauthorized={handleUnauthorized}
+            />
           ) : activePage === 'pallets' ? (
             <PalletsPage token={session.token} canCreatePallets={canOperateLogistics}
               onUnauthorized={handleUnauthorized} />
