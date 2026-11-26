@@ -4,6 +4,7 @@ import WarehousesPage from './pages/WarehousesPage'
 import PalletsPage from './pages/PalletsPage'
 import GoodsReceiptsPage from './pages/GoodsReceiptsPage'
 import OrdersPage from './pages/OrdersPage'
+import ShipmentsPage from './pages/ShipmentsPage'
 import './App.css'
 
 type LoginResponse = {
@@ -300,6 +301,12 @@ function App() {
               token={session.token}
               canManageOrders={canManageOrders}
               canPick={canOperateLogistics}
+              onUnauthorized={handleUnauthorized}
+            />
+          ) : activePage === 'shipments' ? (
+            <ShipmentsPage
+              token={session.token}
+              canManageShipments={canManageOrders}
               onUnauthorized={handleUnauthorized}
             />
           ) : (
