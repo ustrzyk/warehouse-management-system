@@ -25,6 +25,7 @@ public sealed class JwtTokenService
     public async Task<LoginResponse> CreateAsync(
         ApplicationUser user)
     {
+        // Pobieram konfigurację JWT z ustawień.
         var key = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("Missing Jwt:Key.");
 
@@ -34,11 +35,13 @@ public sealed class JwtTokenService
         var audience = _configuration["Jwt:Audience"]
             ?? throw new InvalidOperationException("Missing Jwt:Audience.");
 
+        // Pobieram role i aktualny security stamp użytkownika.
         var roles = await _userManager.GetRolesAsync(user);
 
         var securityStamp =
             await _userManager.GetSecurityStampAsync(user);
 
+        // Składam claims, które trafią do tokenu.
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, user.Id),
@@ -54,6 +57,7 @@ public sealed class JwtTokenService
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+        // Ustawiam czas życia tokenu i klucz podpisu.
         var now = DateTime.UtcNow;
         var expires = now.AddMinutes(30);
 

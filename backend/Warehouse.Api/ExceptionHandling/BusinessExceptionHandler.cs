@@ -11,6 +11,7 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
+        // Mapuję wyjątki biznesowe na odpowiednie kody HTTP.
         var statusCode = exception switch
         {
             DuplicateProductCategoryCodeException =>
@@ -122,6 +123,7 @@ public sealed class BusinessExceptionHandler : IExceptionHandler
             return false;
         }
 
+        // Ustawiam tytuł problem details zależnie od typu błędu.
         var title = statusCode == StatusCodes.Status409Conflict
             ? "Conflict"
             : "Invalid request";

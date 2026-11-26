@@ -15,7 +15,7 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
     {
     }
 
-    // Warehouse structure
+    // Trzymam encje struktury magazynu.
     public DbSet<WarehouseEntity> Warehouses
         => Set<WarehouseEntity>();
 
@@ -25,7 +25,7 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StorageLocation> StorageLocations
         => Set<StorageLocation>();
 
-    // Product catalog
+    // Trzymam encje katalogu produktów.
     public DbSet<ProductCategory> ProductCategories
         => Set<ProductCategory>();
 
@@ -38,7 +38,7 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ProductBatch> ProductBatches
         => Set<ProductBatch>();
 
-    // Logistic units
+    // Trzymam encje jednostek logistycznych.
     public DbSet<LogisticUnit> LogisticUnits
         => Set<LogisticUnit>();
 
@@ -48,25 +48,25 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<LogisticUnitMovement> LogisticUnitMovements
         => Set<LogisticUnitMovement>();
 
-    // Goods receipts
+    // Trzymam encje przyjęć towaru.
     public DbSet<GoodsReceipt> GoodsReceipts
         => Set<GoodsReceipt>();
 
     public DbSet<GoodsReceiptItem> GoodsReceiptItems
         => Set<GoodsReceiptItem>();
 
-    // Warehouse orders
+    // Trzymam encje zleceń magazynowych.
     public DbSet<WarehouseOrder> WarehouseOrders
         => Set<WarehouseOrder>();
 
     public DbSet<WarehouseOrderItem> WarehouseOrderItems
         => Set<WarehouseOrderItem>();
 
-    // Picking
+    // Trzymam encje operacji kompletacji.
     public DbSet<PickingOperation> PickingOperations
         => Set<PickingOperation>();
 
-    // Shipping
+    // Trzymam encje wysyłek.
     public DbSet<Shipment> Shipments
         => Set<Shipment>();
 
@@ -74,7 +74,7 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // Additional user properties
+        // Dodatkowo konfiguruję właściwości użytkownika.
         modelBuilder.Entity<ApplicationUser>(builder =>
         {
             builder.Property(x => x.FullName)
@@ -86,7 +86,7 @@ public class WarehouseDbContext : IdentityDbContext<ApplicationUser>
                 .IsRequired();
         });
 
-        // Existing warehouse configurations
+        // Podpinam wszystkie konfiguracje encji z assembly.
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(WarehouseDbContext).Assembly);
     }

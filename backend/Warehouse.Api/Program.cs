@@ -15,15 +15,15 @@ using Warehouse.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers and OpenAPI
+// Ogarniam kontrolery i OpenAPI.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Global exception handling
+// Odpalam globalną obsługę wyjątków.
 builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
 builder.Services.AddProblemDetails();
 
-// SQL Server
+// Biorę connection string do SQL Servera.
 var connectionString =
     builder.Configuration.GetConnectionString("WarehouseDb")
     ?? throw new InvalidOperationException(
@@ -31,7 +31,7 @@ var connectionString =
 
 builder.Services.AddInfrastructure(connectionString);
 
-// JWT configuration
+// Ustawiam podstawy pod JWT.
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Missing Jwt:Key.");
 
@@ -47,7 +47,7 @@ if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
         "JWT key must have at least 32 bytes.");
 }
 
-// JWT authentication
+// Podpinam uwierzytelnianie JWT.
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -116,7 +116,7 @@ builder.Services
         };
     });
 
-// Require authentication by default
+// Wymuszam logowanie jako domyślną opcję.
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy =
@@ -125,10 +125,10 @@ builder.Services.AddAuthorization(options =>
             .Build();
 });
 
-// JWT token generator
+// Dorzucam serwis do generowania tokenów JWT.
 builder.Services.AddScoped<JwtTokenService>();
 
-// Application services
+// Wrzucam rejestrację usług aplikacyjnych.
 builder.Services.AddScoped<
     IProductCategoryService,
     ProductCategoryService>();
@@ -183,7 +183,7 @@ builder.Services.AddScoped<
 
 var app = builder.Build();
 
-// Development identity seeding
+// Seeduję użytkowników testowych na devie.
 if (app.Environment.IsDevelopment())
 {
     await IdentitySeeder.SeedAsync(
@@ -191,16 +191,16 @@ if (app.Environment.IsDevelopment())
         app.Configuration);
 }
 
-// Global exception middleware
+// Odpalam middleware do globalnych wyjątków.
 app.UseExceptionHandler();
 
-// OpenAPI in Development
+// Wystawiam OpenAPI tylko na środowisku dev.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi().AllowAnonymous();
 }
 
-// HTTP pipeline
+// Ustawiam pipeline HTTP.
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

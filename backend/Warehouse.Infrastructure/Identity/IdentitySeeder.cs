@@ -19,7 +19,7 @@ public static class IdentitySeeder
         var userManager = scope.ServiceProvider
             .GetRequiredService<UserManager<ApplicationUser>>();
 
-        // Create missing roles
+        // Tworzę brakujące role systemowe.
         string[] roles =
         {
             WarehouseRoles.Administrator,
@@ -40,7 +40,7 @@ public static class IdentitySeeder
                 $"Tworzenie roli {roleName}");
         }
 
-        // Read administrator credentials
+        // Czytam dane konta administratora z konfiguracji.
         var email = configuration["BootstrapAdmin:Email"]?.Trim();
         var password = configuration["BootstrapAdmin:Password"];
 
@@ -51,7 +51,7 @@ public static class IdentitySeeder
                 "Brak konfiguracji BootstrapAdmin w User Secrets.");
         }
 
-        // Check existing administrator
+        // Sprawdzam, czy administrator już istnieje.
         var existingUser = await userManager.FindByEmailAsync(email);
 
         if (existingUser is not null)
@@ -65,7 +65,7 @@ public static class IdentitySeeder
                     "ale nie ma roli Administrator.");
             }
 
-            // Enable account lockout for existing admin
+            // Włączam blokadę konta dla istniejącego administratora.
             if (!await userManager.GetLockoutEnabledAsync(
                 existingUser))
             {
@@ -82,7 +82,7 @@ public static class IdentitySeeder
             return;
         }
 
-        // Create initial administrator
+        // Tworzę początkowe konto administratora.
         var admin = new ApplicationUser
         {
             UserName = email,
@@ -101,7 +101,7 @@ public static class IdentitySeeder
             createResult,
             "Tworzenie administratora");
 
-        // Assign Administrator role
+        // Przypisuję rolę Administrator do nowego konta.
         var roleResult = await userManager.AddToRoleAsync(
             admin,
             WarehouseRoles.Administrator);

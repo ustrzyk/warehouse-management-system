@@ -16,22 +16,24 @@ public static class DependencyInjection
         this IServiceCollection services,
         string connectionString)
     {
+        // Podpinam DbContext pod SQL Server.
         services.AddDbContext<WarehouseDbContext>(
             options => options.UseSqlServer(connectionString));
 
+        // Ustawiam Identity i politykę logowania.
         services.AddIdentityCore<ApplicationUser>(options =>
         {
-            // Password requirements
+            // Ustawiam wymagania dla hasła.
             options.Password.RequiredLength = 12;
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = true;
 
-            // Users
+            // Wymuszam unikalny email użytkownika.
             options.User.RequireUniqueEmail = true;
 
-            // Lockout
+            // Ustawiam blokadę konta po błędnych próbach.
             options.Lockout.DefaultLockoutTimeSpan =
                 TimeSpan.FromMinutes(15);
 
@@ -40,7 +42,7 @@ public static class DependencyInjection
         .AddRoles<IdentityRole>()
         .AddEntityFrameworkStores<WarehouseDbContext>();
 
-
+        // Rejestruję repozytoria warstwy infrastruktury.
         services.AddScoped<
             IProductCategoryRepository,
             ProductCategoryRepository>();
