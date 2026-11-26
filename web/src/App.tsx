@@ -299,6 +299,7 @@ function App() {
             <OrdersPage
               token={session.token}
               canManageOrders={canManageOrders}
+              canPick={canOperateLogistics}
               onUnauthorized={handleUnauthorized}
             />
           ) : (

@@ -1,5 +1,6 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
+import OrderPickingPanel from './OrderPickingPanel'
 import {
   fetchAllPages,
   formatDate,
@@ -25,13 +26,14 @@ type Props = {
   orderId: number
   token: string
   canManageOrders: boolean
+  canPick: boolean
   onUnauthorized: () => void
   onClose: () => void
   onChanged: () => void
 }
 
 export default function OrdersDetails({
-  orderId, token, canManageOrders,
+  orderId, token, canManageOrders, canPick,
   onUnauthorized, onClose, onChanged,
 }: Props) {
   const [order, setOrder] = useState<Order | null>(null)
@@ -489,6 +491,25 @@ export default function OrdersDetails({
                 Zawartość zamówienia jest teraz tylko do odczytu.
               </p>
             </div>
+          )}
+
+          {(
+            order.status === 'Released' ||
+            order.status === 'Completed' ||
+            order.status === 'Shipped'
+          ) && (
+            <OrderPickingPanel
+              orderId={order.id}
+              status={order.status}
+              items={items}
+              token={token}
+              canPick={canPick}
+              onUnauthorized={onUnauthorized}
+              onChanged={() => {
+                setReload(value => value + 1)
+                onChanged()
+              }}
+            />
           )}
         </>
       )}

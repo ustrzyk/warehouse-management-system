@@ -27,6 +27,7 @@ export type Order = {
 type Props = {
   token: string
   canManageOrders: boolean
+  canPick: boolean
   onUnauthorized: () => void
 }
 
@@ -45,6 +46,7 @@ function orderStatus(status: string) {
 export default function OrdersPage({
   token,
   canManageOrders,
+  canPick,
   onUnauthorized,
 }: Props) {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
@@ -565,6 +567,7 @@ export default function OrdersPage({
           orderId={selectedId}
           token={token}
           canManageOrders={canManageOrders}
+          canPick={canPick}
           onUnauthorized={onUnauthorized}
           onClose={() => setSelectedId(null)}
           onChanged={refresh}
