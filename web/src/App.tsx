@@ -2,7 +2,7 @@ import { useCallback, useState, type FormEvent } from 'react'
 import ProductsPage from './pages/ProductsPage'
 import WarehousesPage from './pages/WarehousesPage'
 import PalletsPage from './pages/PalletsPage'
-import StockPositionsPage from './pages/StockPositionsPage'
+import StockPage from './pages/StockPage'
 import GoodsReceiptsPage from './pages/GoodsReceiptsPage'
 import OrdersPage from './pages/OrdersPage'
 import ShipmentsPage from './pages/ShipmentsPage'
@@ -297,7 +297,7 @@ function App() {
             <WarehousesPage token={session.token} canEditWarehouses={canEditStructure}
               onUnauthorized={handleUnauthorized} />
           ) : activePage === 'stock' ? (
-            <StockPositionsPage
+            <StockPage
               token={session.token}
               onUnauthorized={handleUnauthorized}
             />

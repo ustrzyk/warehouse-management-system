@@ -1,0 +1,80 @@
+
+.stock-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.stock-tab {
+  padding: 11px 18px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.stock-tab:hover {
+  background: #eff6ff;
+}
+
+.stock-tab-active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.stock-tab-active:hover {
+  background: #1d4ed8;
+}
+
+.stock-tab:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 3px;
+}
+
+.stock-availability-table {
+  min-width: 760px;
+}
+
+.stock-number {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-free-positive {
+  color: #15803d;
+}
+
+.stock-free-zero {
+  color: #b45309;
+}
+
+.stock-free-negative {
+  color: #b91c1c;
+}
+
+.stock-shortage {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+@media (max-width: 600px) {
+  .stock-tabs {
+    flex-direction: column;
+  }
+
+  .stock-tab {
+    width: 100%;
+  }
+}

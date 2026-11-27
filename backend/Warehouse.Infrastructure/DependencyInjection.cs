@@ -99,7 +99,9 @@ public static class DependencyInjection
             IStockPositionsRepository,
             StockPositionsRepository>();
 
-
+        services.AddScoped<
+            IStockAvailabilityRepository,
+            StockAvailabilityRepository>();
 
         return services;
     }
