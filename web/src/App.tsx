@@ -1,4 +1,9 @@
-import { useCallback, useState, type FormEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+} from 'react'
 import ProductsPage from './pages/ProductsPage'
 import WarehousesPage from './pages/WarehousesPage'
 import PalletsPage from './pages/PalletsPage'
@@ -23,7 +28,11 @@ type CurrentUser = {
   roles: string[]
 }
 
-type Session = { token: string; user: CurrentUser }
+type Session = {
+  token: string
+  user: CurrentUser
+  expiresAtUtc: string
+}
 type PageId = 'dashboard' | 'products' | 'warehouses' |
   'stock' | 'pallets' | 'receipts' | 'orders' |
   'shipments' | 'users'
@@ -160,6 +169,49 @@ function App() {
     setError('Sesja wygasła. Zaloguj się ponownie.')
   }, [])
 
+  useEffect(() => {
+    if (!session) return
+
+    const expiresAt = Date.parse(session.expiresAtUtc)
+
+    function checkSessionExpiration() {
+      if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) {
+        handleUnauthorized()
+      }
+    }
+
+    // Wygasły lub nieczytelny token: wylogowanie od razu (delay 0).
+    // W przeciwnym razie zapas 1 s po wygaśnięciu JWT.
+    const remaining = expiresAt - Date.now()
+    const timeout = window.setTimeout(
+      checkSessionExpiration,
+      Number.isFinite(remaining) && remaining > 0 ? remaining + 1000 : 0,
+    )
+
+    // Po powrocie do karty również sprawdzamy token.
+    // Przeglądarka może opóźniać timery nieaktywnych kart.
+    window.addEventListener('focus', checkSessionExpiration)
+
+    document.addEventListener(
+      'visibilitychange',
+      checkSessionExpiration,
+    )
+
+    return () => {
+      window.clearTimeout(timeout)
+
+      window.removeEventListener(
+        'focus',
+        checkSessionExpiration,
+      )
+
+      document.removeEventListener(
+        'visibilitychange',
+        checkSessionExpiration,
+      )
+    }
+  }, [session, handleUnauthorized])
+
   function navigateTo(page: PageId) {
     setActivePage(page)
     setMobileMenuOpen(false)
@@ -184,7 +236,11 @@ function App() {
       })
       if (!meResponse.ok) throw new Error('Nie udało się zweryfikować użytkownika.')
       const user = (await meResponse.json()) as CurrentUser
-      setSession({ token: login.accessToken, user })
+      setSession({
+        token: login.accessToken,
+        user,
+        expiresAtUtc: login.expiresAtUtc,
+      })
       setPassword('')
       setActivePage('dashboard')
     } catch (err) {

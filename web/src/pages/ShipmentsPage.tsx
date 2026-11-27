@@ -47,6 +47,8 @@ export default function ShipmentsPage({
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [shipment, setShipment] = useState<Shipment | null>(null)
   const [detailsLoading, setDetailsLoading] = useState(false)
+  const [shipmentLookupFailed, setShipmentLookupFailed] =
+    useState(false)
   const [working, setWorking] = useState(false)
 
   const [carrier, setCarrier] = useState('')
@@ -94,6 +96,13 @@ export default function ShipmentsPage({
         )
 
         setOrders(sorted)
+
+        const lastPage = Math.max(
+          1,
+          Math.ceil(sorted.length / PAGE_SIZE),
+        )
+
+        setPage(current => Math.min(current, lastPage))
       } catch (err) {
         if (controller.signal.aborted) return
 
@@ -122,6 +131,7 @@ export default function ShipmentsPage({
 
     async function loadShipment() {
       setShipment(null)
+      setShipmentLookupFailed(false)
 
       if (selectedOrderId === undefined) {
         setDetailsLoading(false)
@@ -165,6 +175,8 @@ export default function ShipmentsPage({
       } catch (err) {
         if (controller.signal.aborted) return
 
+        setShipmentLookupFailed(true)
+
         setError(err instanceof Error
           ? err.message
           : 'Błąd pobierania wysyłki.')
@@ -180,8 +192,16 @@ export default function ShipmentsPage({
   }, [selectedOrderId, token, reload, onUnauthorized])
 
   function openOrder(order: Order) {
+    // Ten sam identyfikator nie uruchomi ponownie efektu pobierania,
+    // więc nie zerujemy stanu wysyłki.
+    const sameOrder = order.id === selectedOrderId
+
     setSelectedOrder(order)
+    if (sameOrder) return
+
     setShipment(null)
+    setDetailsLoading(true)
+    setShipmentLookupFailed(false)
     setCarrier('')
     setTracking('')
     setError(null)
@@ -193,7 +213,8 @@ export default function ShipmentsPage({
 
     if (!selectedOrder ||
         selectedOrder.status !== 'Completed' ||
-        !canManageShipments || working || detailsLoading) {
+        !canManageShipments || working ||
+        detailsLoading || shipmentLookupFailed) {
       return
     }
 
@@ -547,7 +568,29 @@ export default function ShipmentsPage({
             </p>
           )}
 
+          {!detailsLoading && shipmentLookupFailed && (
+            <div className="receipt-editor">
+              <p className="receipt-hint">
+                Nie udało się sprawdzić, czy dokument wysyłki
+                już istnieje. Tworzenie kolejnego dokumentu
+                zostało wstrzymane.
+              </p>
+
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() => {
+                  setError(null)
+                  setReload(value => value + 1)
+                }}
+              >
+                Ponów sprawdzenie wysyłki
+              </button>
+            </div>
+          )}
+
           {!detailsLoading && !shipment &&
+            !shipmentLookupFailed &&
             selectedOrder.status === 'Completed' &&
             canManageShipments && (
             <form
@@ -619,6 +662,7 @@ export default function ShipmentsPage({
           )}
 
           {!detailsLoading && !shipment &&
+            !shipmentLookupFailed &&
             selectedOrder.status === 'Shipped' && (
             <div className="error-message">
               Zamówienie jest wysłane, ale nie odnaleziono
