@@ -370,6 +370,9 @@ export default function OrderPickingPanel({
       )
 
       setQuantity('1')
+      setPallet(null)
+      setPalletItems([])
+      setPalletCode('')
       setPalletItemId(0)
 
       if (amount >= remaining) {

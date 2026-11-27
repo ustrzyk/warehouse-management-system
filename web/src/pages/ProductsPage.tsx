@@ -107,6 +107,16 @@ export default function ProductsPage({
           (await response.json()) as PagedResult<Product>
 
         if (!controller.signal.aborted) {
+          const lastPage = Math.max(
+            1,
+            Math.ceil(result.totalCount / PAGE_SIZE),
+          )
+
+          if (page > lastPage) {
+            setPage(lastPage)
+            return
+          }
+
           setData(result)
         }
       } catch (err) {

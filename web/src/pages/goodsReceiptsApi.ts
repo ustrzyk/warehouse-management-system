@@ -50,7 +50,11 @@ export type GoodsReceiptItem = {
   quantity: number
 }
 
-type ApiProblem = { detail?: string; title?: string }
+type ApiProblem = {
+  detail?: string
+  title?: string
+  errors?: Record<string, string[]>
+}
 
 export class SessionExpiredError extends Error {
   constructor() {
@@ -58,12 +62,45 @@ export class SessionExpiredError extends Error {
   }
 }
 
-export async function readApiError(response: Response, fallback: string) {
-  if (response.status === 401) return 'Sesja wygasła.'
-  if (response.status === 403) return 'Brak uprawnień do tej operacji.'
-  if (response.status === 404) return 'Nie znaleziono wskazanego elementu.'
-  const problem = (await response.json().catch(() => null)) as ApiProblem | null
-  return problem?.detail || `${fallback} (HTTP ${response.status}).`
+export async function readApiError(
+  response: Response,
+  fallback: string,
+): Promise<string> {
+  if (response.status === 401) {
+    return 'Sesja wygasła. Zaloguj się ponownie.'
+  }
+
+  if (response.status === 403) {
+    return 'Brak uprawnień do wykonania tej operacji.'
+  }
+
+  const problem = await response.json().catch(() => null) as
+    ApiProblem | null
+
+  if (
+    typeof problem?.detail === 'string' &&
+    problem.detail.trim()
+  ) {
+    return problem.detail
+  }
+
+  const validationMessages = Object.values(
+    problem?.errors ?? {},
+  )
+    .flat()
+    .filter(message =>
+      typeof message === 'string' && message.trim(),
+    )
+
+  if (validationMessages.length > 0) {
+    return validationMessages.slice(0, 3).join(' ')
+  }
+
+  if (response.status === 404) {
+    return 'Nie znaleziono wskazanego elementu.'
+  }
+
+  return `${fallback} (HTTP ${response.status}).`
 }
 
 export async function fetchAllPages<T>(

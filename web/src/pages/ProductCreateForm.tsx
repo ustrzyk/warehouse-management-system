@@ -1,6 +1,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import './ProductCreateForm.css'
+import { readApiError } from './goodsReceiptsApi'
 
 type LookupItem = {
   id: number
@@ -50,6 +51,11 @@ async function getLookupItems(
     const result = (await response.json()) as PagedResult<LookupItem>
     items.push(...result.items)
     total = result.totalCount
+
+    if (result.items.length === 0) {
+      break
+    }
+
     page += 1
   } while (items.length < total)
 
@@ -140,7 +146,12 @@ export default function ProductCreateForm({
         throw new Error('Nie masz uprawnień do dodawania produktów.')
       }
       if (!response.ok) {
-        throw new Error(`Nie udało się zapisać produktu (HTTP ${response.status}). Sprawdź, czy kod i EAN nie są już używane.`)
+        throw new Error(
+          await readApiError(
+            response,
+            'Nie udało się dodać produktu',
+          ),
+        )
       }
 
       onSaved()

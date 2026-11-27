@@ -1,6 +1,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react'
 import './ProductCreateForm.css'
+import { readApiError } from './goodsReceiptsApi'
 
 type ProductDetail = {
   id: number
@@ -45,7 +46,7 @@ async function loadLookup(
 
   do {
     const response = await fetch(
-      `${endpoint}?Page=${page}&PageSize=100&IsActive=true`,
+      `${endpoint}?Page=${page}&PageSize=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -189,6 +190,22 @@ export default function ProductEditForm({
       return
     }
 
+    const selectedCategory = categories.find(
+      item => item.id === product.productCategoryId,
+    )
+
+    const selectedUnit = units.find(
+      item => item.id === product.unitOfMeasureId,
+    )
+
+    if (!selectedCategory?.isActive || !selectedUnit?.isActive) {
+      setError(
+        'Wybrana kategoria lub jednostka miary jest nieaktywna. ' +
+        'Wybierz aktywne pozycje przed zapisaniem produktu.',
+      )
+      return
+    }
+
     setSaving(true)
     setError(null)
 
@@ -227,7 +244,10 @@ export default function ProductEditForm({
 
       if (!response.ok) {
         throw new Error(
-          `Nie udało się zapisać zmian (HTTP ${response.status}). Sprawdź poprawność danych.`
+          await readApiError(
+            response,
+            'Nie udało się zapisać zmian produktu',
+          ),
         )
       }
 
@@ -351,8 +371,13 @@ export default function ProductEditForm({
             >
               <option value={0}>Wybierz kategorię</option>
               {categories.map(category => (
-                <option key={category.id} value={category.id}>
+                <option
+                  key={category.id}
+                  value={category.id}
+                  disabled={!category.isActive}
+                >
                   {category.name}
+                  {!category.isActive ? ' (nieaktywna)' : ''}
                 </option>
               ))}
             </select>
@@ -373,8 +398,13 @@ export default function ProductEditForm({
             >
               <option value={0}>Wybierz jednostkę</option>
               {units.map(unit => (
-                <option key={unit.id} value={unit.id}>
+                <option
+                  key={unit.id}
+                  value={unit.id}
+                  disabled={!unit.isActive}
+                >
                   {unit.name}
+                  {!unit.isActive ? ' (nieaktywna)' : ''}
                 </option>
               ))}
             </select>
